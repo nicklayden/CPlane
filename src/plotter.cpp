@@ -1,0 +1,116 @@
+/*
+    Main source file for a c++ plotting interface. 
+    Written with SFML.
+
+*/
+
+#include <SFML/Graphics.hpp>
+#include <iostream>
+#include <fstream>
+#include <math.h>
+#include <cmath>
+#include <vector>
+#include <string>
+#include "plotter.hpp"
+
+
+Plot::Plot(std::string title)
+:title(title), mainwindow(sf::VideoMode(800,800),title)
+{
+    // initialize parameters of the main drawing window.
+    // plotView.setCenter((xmax - xmin), (xmax - xmin)/2.0);
+    // plotView.setSize(xscale*(xmax - xmin), -yscale*(ymax - ymin));
+    // plotView.setViewport(sf::FloatRect(0,0,1,1));
+    plotView.setCenter(0,0);
+    plotView.setSize(10,-10);
+    plotView.setViewport(sf::FloatRect(0.1,0.1,0.8,0.8));
+
+    axesView.setCenter(0,0);
+    axesView.setSize(10,-10);
+    axesView.setViewport(sf::FloatRect(0,0,1,1));
+    mainwindow.clear(sf::Color::White);
+}
+
+void Plot::plot(std::vector<double> x, std::vector<double> y, sf::Color colour)
+{
+    // Check vector bounds to rescale axes. only if autoscale = true
+    // CheckBounds(x,y);
+    
+    EventLoop();
+    DrawLines(x,y, colour);
+    mainwindow.display();
+}
+
+void Plot::show()
+{
+    while (mainwindow.isOpen())
+    {
+        EventLoop();
+    }
+}
+
+void Plot::DrawLines(std::vector<double> x, std::vector<double> y, sf::Color colour)
+{
+    int xsize = x.size(); int ysize = y.size();
+    if (xsize == ysize)
+    {
+        // Draws lines between a series of points.
+        sf::VertexArray solidline(sf::LinesStrip,x.size());
+            for (size_t i = 0; i < xsize; i++) {
+                solidline[i].position = sf::Vector2f(x[i],y[i]);
+                if (i%2 == 0) {
+                    solidline[i].color = colour;
+                } else {
+                    solidline[i].color = colour;
+                }
+            }
+            mainwindow.draw(solidline);
+    } else {
+        std::cerr << "ERROR: x and y must be the same size.\n";
+    }
+}
+
+void Plot::EventLoop()
+{
+    sf::Event event;
+    while (mainwindow.pollEvent(event))
+    {
+        if (event.type == sf::Event::Closed)
+        {
+            mainwindow.close();
+        }   
+    }
+    // mainwindow.clear(sf::Color::Black);
+    // Draw axes bounds and (eventually) labels
+    mainwindow.setView(axesView);
+    DrawBoundingBox(sf::Color::Black);
+
+    mainwindow.setView(plotView);
+    // mainwindow.display();
+}
+
+void Plot::DrawBoundingBox(sf::Color colour)
+{
+    // Draws the bounding box for the axes around the window.
+    sf::VertexArray boundingbox(sf::LinesStrip, 5);
+    xmin = -4; xmax = 4;
+    ymin = -4; ymax = 4;
+    boundingbox[0].position = sf::Vector2f(xmin, ymax);
+    boundingbox[1].position = sf::Vector2f(xmax, ymax);
+    boundingbox[2].position = sf::Vector2f(xmax, ymin);
+    boundingbox[3].position = sf::Vector2f(xmin, ymin);
+    boundingbox[4].position = sf::Vector2f(xmin, ymax);
+
+    for (size_t i = 0; i < 5; i++) {
+        boundingbox[i].color = colour;
+    }
+    mainwindow.draw(boundingbox);
+}
+
+inline void Plot::CheckBounds(std::vector<double> x, std::vector<double> y)
+{
+    auto xbounds = std::minmax_element(x.begin(),x.end());
+    auto ybounds = std::minmax_element(y.begin(),y.end());
+    std::cout << "X bounds: [" << *xbounds.first << "," << *xbounds.second << "]" << std::endl;
+    std::cout << "Y bounds: [" << *ybounds.first << "," << *ybounds.second << "]" << std::endl;
+}
