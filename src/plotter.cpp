@@ -14,7 +14,7 @@
 #include "plotter.hpp"
 
 
-Plot::Plot(std::string title)
+Plot::Plot(std::string title, float width, float height)
 :title(title), mainwindow(sf::VideoMode(800,800),title)
 {
     // initialize parameters of the main drawing window.
@@ -22,7 +22,8 @@ Plot::Plot(std::string title)
     // plotView.setSize(xscale*(xmax - xmin), -yscale*(ymax - ymin));
     // plotView.setViewport(sf::FloatRect(0,0,1,1));
     plotView.setCenter(0,0);
-    plotView.setSize(10,-10);
+    // plotView.setSize(abs(xmin) + abs(xmax),-(abs(ymin) + abs(ymax)));
+    plotView.setSize(width,-height);
     plotView.setViewport(sf::FloatRect(0.1,0.1,0.8,0.8));
 
     axesView.setCenter(0,0);
@@ -86,6 +87,9 @@ void Plot::EventLoop()
     DrawBoundingBox(sf::Color::Black);
 
     mainwindow.setView(plotView);
+    // double width = abs(xmin) + abs(xmax);
+    // double height= abs(ymin) + abs(ymax);
+    // plotView.setSize(width,-height);
     // mainwindow.display();
 }
 
@@ -113,4 +117,18 @@ inline void Plot::CheckBounds(std::vector<double> x, std::vector<double> y)
     auto ybounds = std::minmax_element(y.begin(),y.end());
     std::cout << "X bounds: [" << *xbounds.first << "," << *xbounds.second << "]" << std::endl;
     std::cout << "Y bounds: [" << *ybounds.first << "," << *ybounds.second << "]" << std::endl;
+}
+
+void Plot::setxlim(double xmin, double xmax)
+{
+    this->xmin = xmin;
+    this->xmax = xmax;
+
+}
+
+void Plot::setylim(double ymin, double ymax)
+{
+    this->ymin = ymin;
+    this->ymax = ymax;
+
 }

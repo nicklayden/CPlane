@@ -11,20 +11,22 @@
 class Plot
 {
     public:
-        Plot(std::string title);
+        Plot(std::string title, float width = 5, float height = 5);
         void plot(std::vector<double> x, std::vector<double> y,  sf::Color color = sf::Color::Blue); 
         void show();
 
         sf::RenderWindow mainwindow;
         // sf::Text title;
 
-        double xmax = 15;
-        double xmin = -15;
-        double ymin = -15;
-        double ymax = 15;
+        double xmax = .5;
+        double xmin = -.5;
+        double ymin = -.5;
+        double ymax = .5;
 
         void EventLoop();
         void animate();
+        void setxlim(double xmin, double xmax);
+        void setylim(double ymin, double ymax);
     private:
         void DrawLines(std::vector<double> x, std::vector<double> y, sf::Color colour);
         void DrawPoints(std::vector<double> x, std::vector<double> y);
