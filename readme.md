@@ -6,7 +6,7 @@ Similar to PPLANE, but animated and shit because why not. And written in c++
 
 # Animation example
 
-![Small N](https://github.com/nicklayden/CPlane/blob/master/Peek 2017-10-23 18-48.giff "Nbody Simulation")
+![Changing magnetic strength](https://github.com/nicklayden/CPlane/blob/master/Peek%202017-10-23%2018-48.gif "Magneto Elastic Beam")
 
 
 ## Things to make: 
