@@ -18,18 +18,14 @@ Plot::Plot(std::string title, float width, float height)
 :title(title), mainwindow(sf::VideoMode(800,800),title)
 {
     // initialize parameters of the main drawing window.
-    // plotView.setCenter((xmax - xmin), (xmax - xmin)/2.0);
-    // plotView.setSize(xscale*(xmax - xmin), -yscale*(ymax - ymin));
-    // plotView.setViewport(sf::FloatRect(0,0,1,1));
     plotView.setCenter(0,0);
-    // plotView.setSize(abs(xmin) + abs(xmax),-(abs(ymin) + abs(ymax)));
     plotView.setSize(width,-height);
     plotView.setViewport(sf::FloatRect(0.1,0.1,0.8,0.8));
 
     axesView.setCenter(0,0);
     axesView.setSize(10,-10);
     axesView.setViewport(sf::FloatRect(0,0,1,1));
-    mainwindow.clear(sf::Color::White);
+    mainwindow.clear(sf::Color::Black);
 }
 
 void Plot::plot(std::vector<double> x, std::vector<double> y, sf::Color colour)
@@ -39,7 +35,7 @@ void Plot::plot(std::vector<double> x, std::vector<double> y, sf::Color colour)
     
     EventLoop();
     DrawLines(x,y, colour);
-    mainwindow.display();
+    // mainwindow.display();
 }
 
 void Plot::show()
@@ -84,7 +80,7 @@ void Plot::EventLoop()
     // mainwindow.clear(sf::Color::Black);
     // Draw axes bounds and (eventually) labels
     mainwindow.setView(axesView);
-    DrawBoundingBox(sf::Color::Black);
+    DrawBoundingBox(sf::Color::White);
 
     mainwindow.setView(plotView);
     // double width = abs(xmin) + abs(xmax);
