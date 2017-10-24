@@ -13,6 +13,7 @@ class Plot
     public:
         Plot(std::string title, float width = 5, float height = 5);
         void plot(std::vector<double> x, std::vector<double> y,  sf::Color color = sf::Color::Blue); 
+        void scatter(std::vector<double> x, std::vector<double> y,  sf::Color color = sf::Color::Blue);
         void show();
 
         sf::RenderWindow mainwindow;
@@ -30,10 +31,10 @@ class Plot
         void setylim(double ymin, double ymax);
         sf::View axesView;
         sf::View plotView;
-                
+
     private:
         void DrawLines(std::vector<double> x, std::vector<double> y, sf::Color colour);
-        void DrawPoints(std::vector<double> x, std::vector<double> y);
+        void DrawPoints(std::vector<double> x, std::vector<double> y, sf::Color colour);
         void DrawBoundingBox(sf::Color colour);
         void CheckBounds(std::vector<double> x, std::vector<double> y);
 

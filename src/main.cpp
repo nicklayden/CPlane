@@ -9,6 +9,7 @@
 #include "plotter.hpp"
 #include <string>
 #include <sstream>
+#include <complex>
 
 
 double yprime(double x, double y, double a, double b);
@@ -23,9 +24,8 @@ int main()
         Screen Text */
 
     sf::Font font;
-    sf::Text text;
-    if (!font.loadFromFile("OpenSans-Regular.ttf"))
-    {
+    sf::Text text, eq1,eq2,eq3;
+    if (!font.loadFromFile("OpenSans-Regular.ttf")) {
         return 1;
     }
 
@@ -34,34 +34,62 @@ int main()
     text.setCharacterSize(16);
     text.setColor(sf::Color::White);
     text.setPosition(-320,-350);
+
+
+    // eq1.setFont(font);
+    // eq1.setString("Test");
+    // eq1.setCharacterSize(16);
+    // eq1.setColor(sf::Color::White);
+    // eq1.setPosition(-320,-350);
+
+
+    // eq2.setFont(font);
+    // eq2.setString("Test");
+    // eq2.setCharacterSize(16);
+    // eq2.setColor(sf::Color::White);
+    // eq2.setPosition(-320,-350);
+
+
+    // eq3.setFont(font);
+    // eq3.setString("Test");
+    // eq3.setCharacterSize(16);
+    // eq3.setColor(sf::Color::White);
+    // eq3.setPosition(-320,-350);
     //______________________________________________________________________________//
 
 
 
     // containers and Number of steps to run the solver for.
     std::vector<std::vector<double> > xypts,xypts2,xy3,xy4;
+    std::vector<double> xeqpoints(3), yeqpoints(3);
+    xeqpoints[0] = 0; yeqpoints[0] = 0; // point (0,0)
     int Nsteps = 50000;
 
     // Range of alpha (damping) and beta (magnetic 'strength') values.
-    std::vector<double> beta(100),alpha(100);
-    for (size_t i = 0; i < 100; i++) {
+    std::vector<double> beta(200),alpha(200);
+    for (size_t i = 0; i < beta.size(); i++) {
         beta[i] = 0.8 + 0.02*i;
         alpha[i] = 0.1 + 0.01*i;
     }
 
 
 
-    Plot plt("TEST",2,2);
+    Plot plt("CPlane",2,2);
     // plt.mainwindow.setFramerateLimit(60);
     while(plt.mainwindow.isOpen()) {
         
         for (size_t i = 0; i < beta.size(); i++) {
-            for (size_t j = 0; j < 10; j++)
-            {
+            for (size_t j = 0; j < 10; j++) {
                 xypts = adams_bashforth_4step(1,j,Nsteps,xprime,yprime,0.3,beta[i]);   
-                xypts2 = adams_bashforth_4step(1,j,Nsteps/2,xprime,yprime,0.3,beta[i],true);   
+                // xypts2 = adams_bashforth_4step(1,j,Nsteps/2,xprime,yprime,0.3,beta[i],true);   
+                std::complex<double> xeq = sqrt(1 - 1/beta[i]);
+                xeqpoints[1] = xeq.real(); // get the real part of the eq point.
+                yeqpoints[1] = 0;
+                xeqpoints[2] = -xeq.real();
+                yeqpoints[2] = 0;
                 plt.plot(xypts[0],xypts[1],sf::Color::Green);
-                plt.plot(xypts2[0],xypts2[1],sf::Color::Green);
+                // plt.plot(xypts2[0],xypts2[1],sf::Color::Green);
+                plt.scatter(xeqpoints,yeqpoints, sf::Color::Red);
             }
             plt.mainwindow.setView(plt.axesView);
             text.setString(Numbertostring("Beta =",beta[i]));

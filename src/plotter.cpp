@@ -50,6 +50,13 @@ void Plot::plot(std::vector<double> x, std::vector<double> y, sf::Color colour)
     // mainwindow.display();
 }
 
+void Plot::scatter(std::vector<double> x, std::vector<double> y, sf::Color colour)
+{
+    EventLoop();
+    DrawPoints(x,y,colour);
+
+}
+
 void Plot::show()
 {
     while (mainwindow.isOpen())
@@ -67,16 +74,28 @@ void Plot::DrawLines(std::vector<double> x, std::vector<double> y, sf::Color col
         sf::VertexArray solidline(sf::LinesStrip,x.size());
             for (size_t i = 0; i < xsize; i++) {
                 solidline[i].position = sf::Vector2f(x[i],y[i]);
-                if (i%2 == 0) {
-                    solidline[i].color = colour;
-                } else {
-                    solidline[i].color = colour;
-                }
+                // if (i%2 == 0) {
+                solidline[i].color = colour;
+                // } else {
+                solidline[i].color = colour;
+                // }
             }
             mainwindow.draw(solidline);
     } else {
         std::cerr << "ERROR: x and y must be the same size.\n";
     }
+}
+
+void Plot::DrawPoints(std::vector<double> x, std::vector<double> y, sf::Color colour)
+{
+    sf::CircleShape pt(0.01);
+    for (size_t i = 0; i < x.size(); i++) {
+        pt.setOrigin(pt.getRadius(), pt.getRadius());
+        pt.setPosition(x[i],y[i]);
+        pt.setFillColor(colour);
+        mainwindow.draw(pt);
+    }
+
 }
 
 void Plot::EventLoop()
