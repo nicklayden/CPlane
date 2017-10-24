@@ -66,10 +66,10 @@ int main()
     int Nsteps = 50000;
 
     // Range of alpha (damping) and beta (magnetic 'strength') values.
-    std::vector<double> beta(200),alpha(200);
+    std::vector<double> beta(100),alpha(100);
     for (size_t i = 0; i < beta.size(); i++) {
-        beta[i] = 0.8 + 0.02*i;
-        alpha[i] = 0.1 + 0.01*i;
+        beta[i] = 0.8 + 0.01*i;
+        alpha[i] = 0.1 + 0.005*i;
     }
 
 
@@ -80,16 +80,18 @@ int main()
         
         for (size_t i = 0; i < beta.size(); i++) {
             for (size_t j = 0; j < 10; j++) {
-                xypts = adams_bashforth_4step(1,j,Nsteps,xprime,yprime,0.3,beta[i]);   
+                // Forward orbit from initial conditions.
+                xypts = adams_bashforth_4step(1,j,Nsteps,xprime,yprime,0.1,beta[i]);   
+                // Backward orbit from initial conditions.
                 // xypts2 = adams_bashforth_4step(1,j,Nsteps/2,xprime,yprime,0.3,beta[i],true);   
-                std::complex<double> xeq = sqrt(1 - 1/beta[i]);
-                xeqpoints[1] = xeq.real(); // get the real part of the eq point.
-                yeqpoints[1] = 0;
-                xeqpoints[2] = -xeq.real();
-                yeqpoints[2] = 0;
+                // std::complex<double> xeq = sqrt(1 - 1/beta[i]); // x component of the eq points.
+                // xeqpoints[1] = xeq.real(); // get the real part of the eq point.
+                // yeqpoints[1] = 0;
+                // xeqpoints[2] = -xeq.real();
+                // yeqpoints[2] = 0;
                 plt.plot(xypts[0],xypts[1],sf::Color::Green);
                 // plt.plot(xypts2[0],xypts2[1],sf::Color::Green);
-                plt.scatter(xeqpoints,yeqpoints, sf::Color::Red);
+                // plt.scatter(xeqpoints,yeqpoints, sf::Color::Red);
             }
             plt.mainwindow.setView(plt.axesView);
             text.setString(Numbertostring("Beta =",beta[i]));
