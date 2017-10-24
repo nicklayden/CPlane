@@ -1,5 +1,5 @@
 # CPlane
-Mini project for solve for the phase plane of a system of differential equations. 2D, maybe 3D if it is cool enough. Using integration methods to solve a system of DEs, probably using 2 or 3 numerical methods.
+Mini project for solving for the phase plane of an autonomous system of differential equations. 2D, maybe 3D if it is cool enough. Using integration methods to solve a system of DEs, probably using 2 or 3 numerical methods.
 Should also plot vector field, and isoclines,
 
 Similar to PPLANE, but animated and shit because why not. And written in c++
