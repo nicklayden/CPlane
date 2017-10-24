@@ -4,6 +4,9 @@ Should also plot vector field, and isoclines,
 
 Similar to PPLANE, but animated and shit because why not. And written in c++
 
+# Animation example
+
+![Changing magnetic strength](https://github.com/nicklayden/CPlane/blob/master/Peek%202017-10-23%2018-48.gif "Magneto Elastic Beam")
 
 
 ## Things to make: 
