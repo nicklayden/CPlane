@@ -16,8 +16,7 @@ class Plot
         void show();
 
         sf::RenderWindow mainwindow;
-        // sf::Text title;
-
+        // sf::Text texttitle;
         double xmax = .5;
         double xmin = -.5;
         double ymin = -.5;
@@ -25,16 +24,19 @@ class Plot
 
         void EventLoop();
         void animate();
+        void setTitle(std::string title);
+        std::string toString(double number);
         void setxlim(double xmin, double xmax);
         void setylim(double ymin, double ymax);
+        sf::View axesView;
+        sf::View plotView;
+                
     private:
         void DrawLines(std::vector<double> x, std::vector<double> y, sf::Color colour);
         void DrawPoints(std::vector<double> x, std::vector<double> y);
         void DrawBoundingBox(sf::Color colour);
         void CheckBounds(std::vector<double> x, std::vector<double> y);
 
-        sf::View plotView;
-        sf::View axesView;
         std::string title;
         bool autoscale = false;
         float xscale = 1.2;

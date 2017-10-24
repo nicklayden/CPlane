@@ -23,9 +23,21 @@ Plot::Plot(std::string title, float width, float height)
     plotView.setViewport(sf::FloatRect(0.1,0.1,0.8,0.8));
 
     axesView.setCenter(0,0);
-    axesView.setSize(10,-10);
+    axesView.setSize(800,800);
     axesView.setViewport(sf::FloatRect(0,0,1,1));
     mainwindow.clear(sf::Color::Black);
+
+    // Load font package
+    // font.loadFromFile("OpenSans-Regular.ttf");
+
+
+    // Initialize text regions.
+    // texttitle.setFont(font);
+    // texttitle.setString("Test");
+    // texttitle.setCharacterSize(12);
+    // texttitle.setColor(sf::Color::White);
+    // texttitle.setPosition(0,0);
+
 }
 
 void Plot::plot(std::vector<double> x, std::vector<double> y, sf::Color colour)
@@ -81,6 +93,7 @@ void Plot::EventLoop()
     // Draw axes bounds and (eventually) labels
     mainwindow.setView(axesView);
     DrawBoundingBox(sf::Color::White);
+    // mainwindow.draw(texttitle);
 
     mainwindow.setView(plotView);
     // double width = abs(xmin) + abs(xmax);
@@ -93,8 +106,8 @@ void Plot::DrawBoundingBox(sf::Color colour)
 {
     // Draws the bounding box for the axes around the window.
     sf::VertexArray boundingbox(sf::LinesStrip, 5);
-    xmin = -4; xmax = 4;
-    ymin = -4; ymax = 4;
+    xmin = -320; xmax = 320;
+    ymin = -320; ymax = 320;
     boundingbox[0].position = sf::Vector2f(xmin, ymax);
     boundingbox[1].position = sf::Vector2f(xmax, ymax);
     boundingbox[2].position = sf::Vector2f(xmax, ymin);
@@ -126,5 +139,15 @@ void Plot::setylim(double ymin, double ymax)
 {
     this->ymin = ymin;
     this->ymax = ymax;
+
+}
+
+void Plot::setTitle(std::string title)
+{
+
+}
+
+std::string Plot::toString(double number)
+{
 
 }

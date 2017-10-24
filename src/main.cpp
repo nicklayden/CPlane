@@ -7,57 +7,69 @@
 #include <iostream>
 #include "integrators.hpp"
 #include "plotter.hpp"
+#include <string>
+#include <sstream>
 
 
 double yprime(double x, double y, double a, double b);
 double xprime(double x, double y);
 std::vector<std::vector<double> > adams_bashforth_4step(double x0, double y0, int Nsteps, double (*f)(double, double), double (*g)(double, double,double,double), double a, double b, bool timereverse=false);
-
+std::string Numbertostring(std::string text, double num);
 
 int main()
 {
-    // gonna have to rework the integrators. it sucks right now.
-    // std::string smethod = "ab4";
-    // integrator amethod = pickmethod(smethod);
+    //______________________________________________________________________________//
+    /*
+        Screen Text */
 
-    std::vector<std::vector<double> > xypts,xypts2,xy3,xy4;
-    // std::vector<double> x,y,x2,y2,x3,y3,x4,y4;
-    int Nsteps = 100000;
-
-
-    // xypts = adams_bashforth_4step(1,1,Nsteps,xprime,yprime, true);
-    // xypts2 =  adams_bashforth_4step(1,1,Nsteps,xprime,yprime);
-    // xy3 = adams_bashforth_4step(0.5,1.4,Nsteps,xprime,yprime);
-    // xy4 = adams_bashforth_4step(-0.1,-1.2,Nsteps,xprime,yprime);
-    std::vector<double> beta(100);
-    // beta[0] = 0.5; beta[1] = 1.0; beta[2] = 2.0; beta[3] = 5.0;
-    for (size_t i = 0; i < 100; i++)
+    sf::Font font;
+    sf::Text text;
+    if (!font.loadFromFile("OpenSans-Regular.ttf"))
     {
-        beta[i] = 0.9 + 0.01*i;
+        return 1;
     }
+
+    text.setFont(font);
+    text.setString("Test");
+    text.setCharacterSize(16);
+    text.setColor(sf::Color::White);
+    text.setPosition(-320,-350);
+    //______________________________________________________________________________//
+
+
+
+    // containers and Number of steps to run the solver for.
+    std::vector<std::vector<double> > xypts,xypts2,xy3,xy4;
+    int Nsteps = 50000;
+
+    // Range of alpha (damping) and beta (magnetic 'strength') values.
+    std::vector<double> beta(100),alpha(100);
+    for (size_t i = 0; i < 100; i++) {
+        beta[i] = 0.8 + 0.02*i;
+        alpha[i] = 0.1 + 0.01*i;
+    }
+
+
+
     Plot plt("TEST",2,2);
-    // plt.setxlim(-.1,.1);
-    // plt.setylim(-.1,.1);
-    // plt.EventLoop();
-    // plt.plot(xypts[0],xypts[1]);
-    // plt.plot(xypts2[0],xypts2[1]);
-    // plt.plot(xy3[0],xy3[1], sf::Color::Red);
-    // plt.plot(xy4[0],xy4[1], sf::Color::Green);
-    plt.mainwindow.setFramerateLimit(100);
+    // plt.mainwindow.setFramerateLimit(60);
     while(plt.mainwindow.isOpen()) {
         
         for (size_t i = 0; i < beta.size(); i++) {
-            for (size_t j = 0; j < 5; j++)
+            for (size_t j = 0; j < 10; j++)
             {
-                xypts = adams_bashforth_4step(j,1,Nsteps,xprime,yprime,0.1,beta[i]);   
+                xypts = adams_bashforth_4step(1,j,Nsteps,xprime,yprime,0.3,beta[i]);   
+                xypts2 = adams_bashforth_4step(1,j,Nsteps/2,xprime,yprime,0.3,beta[i],true);   
                 plt.plot(xypts[0],xypts[1],sf::Color::Green);
+                plt.plot(xypts2[0],xypts2[1],sf::Color::Green);
             }
+            plt.mainwindow.setView(plt.axesView);
+            text.setString(Numbertostring("Beta =",beta[i]));
+            plt.mainwindow.draw(text);
             plt.mainwindow.display();
             plt.mainwindow.clear(sf::Color::Black);
         }
-        plt.EventLoop();
-        // plt.mainwindow.clear(sf::Color::Black);
-    
+        plt.EventLoop();    
     }
     // plt.show();
 
@@ -66,7 +78,9 @@ int main()
 
 
 
-
+/*
+    Adams bashforth 4 step method. Works ok enough.
+*/
 std::vector<std::vector<double> > adams_bashforth_4step(double x0, double y0, int Nsteps,
                              double (*f)(double, double), double (*g)(double, double,double,double),
                              double a, double b,bool timereverse)
@@ -165,5 +179,13 @@ double xprime(double x, double y)
 
 double yprime(double x, double y, double a, double b)
 {
-  return -2*a*y - x + b*x*(1 - x*x);
+  return -2*a*y - x + b*x*(1-x*x);
+}
+
+
+std::string Numbertostring(std::string text, double num)
+{
+    std::ostringstream ss;
+    ss << text << " " << num << " ";
+    return ss.str();
 }
