@@ -7,6 +7,7 @@ Similar to PPLANE, but animated and shit because why not. And written in c++
 # Animation example
 
 ![Changing magnetic strength](https://github.com/nicklayden/CPlane/blob/master/Peek%202017-10-23%2018-48.gif "Magneto Elastic Beam")
+Magneto elastic beam problem. With damping term a=0.1. The magnetic force term is beta=[0.9,1.9]
 
 
 ## Things to make: 
