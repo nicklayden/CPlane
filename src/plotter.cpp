@@ -15,7 +15,7 @@
 
 
 Plot::Plot(std::string title, float width, float height)
-:title(title), mainwindow(sf::VideoMode(800,800),title)
+:title(title), mainwindow(sf::VideoMode(400,400),title)
 {
     // initialize parameters of the main drawing window.
     plotView.setCenter(0,0);
