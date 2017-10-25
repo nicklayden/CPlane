@@ -11,7 +11,7 @@
 class Plot
 {
     public:
-        Plot(std::string title, float width = 5, float height = 5);
+        Plot(std::string title, float width = 5, float height = 5, int sizex = 800, int sizey = 800);
         void plot(std::vector<double> x, std::vector<double> y,  sf::Color color = sf::Color::Blue); 
         void scatter(std::vector<double> x, std::vector<double> y,  sf::Color color = sf::Color::Blue);
         void show();

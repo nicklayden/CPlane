@@ -71,8 +71,8 @@ int main()
     }
 
     Plot plt("CPlane",2,2);
-    Plot plt2("x(t)",50,5);
-    Plot plt3("y(t)",50,5);
+    Plot plt2("x(t)",50,5,600,600);
+    Plot plt3("y(t)",50,5,600,600);
     plt2.plotView.setCenter(50./2., 0);
     plt3.plotView.setCenter(50./2., 0);
     // plt.mainwindow.setFramerateLimit(60);
@@ -107,7 +107,9 @@ int main()
             plt.mainwindow.display();
             plt.mainwindow.clear(sf::Color::Black);
         }
-        plt.EventLoop();    
+        plt.EventLoop();  
+        plt2.EventLoop();  
+        plt3.EventLoop();    
     }
     // plt.show();
 

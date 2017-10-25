@@ -14,8 +14,8 @@
 #include "plotter.hpp"
 
 
-Plot::Plot(std::string title, float width, float height)
-:title(title), mainwindow(sf::VideoMode(400,400),title)
+Plot::Plot(std::string title, float width, float height, int sizex, int sizey)
+:title(title), mainwindow(sf::VideoMode(sizex,sizey),title)
 {
     // initialize parameters of the main drawing window.
     plotView.setCenter(0,0);
