@@ -63,11 +63,11 @@ int main()
     int Nsteps = 50000;
 
     // Range of alpha (damping) and beta (magnetic 'strength') values.
-    std::vector<double> beta(100),alpha(100), betaround(200);
+    std::vector<double> beta(200),alpha(100), betaround(200);
     for (size_t i = 0; i < beta.size(); i++) {
-        beta[i] = 0.8 + 0.01*i;
+        beta[i] = 0.5 + 0.01*i;
         alpha[i] = 0.1 + 0.005*i;
-        betaround[i] = beta[i];
+        // betaround[i] = beta[i];
     }
 
     Plot plt("CPlane",2,2);
@@ -90,9 +90,9 @@ int main()
                 // MAGNETO ELASTIC BEAM
                 xypts = adams_bashforth_4step(1,j, Nsteps, xprime, yprime, 0.1, beta[i]);
                 // xypts2= adams_bashforth_4step(1,j, Nsteps, xprime, yprime, 0.1, beta[i],true);
-                plt.plot(xypts[0],xypts[1],sf::Color::Green);
-                plt2.plot(xypts[2],xypts[0],sf::Color::Blue);
-                plt3.plot(xypts[2],xypts[1],sf::Color::Red);
+                plt.plot(xypts[0],xypts[1],sf::Color::Green); // phase plane
+                plt2.plot(xypts[2],xypts[0],sf::Color::Blue); // X-T plane
+                plt3.plot(xypts[2],xypts[1],sf::Color::Red);  // Y-T plane
             }
             plt2.mainwindow.display();
             plt2.mainwindow.clear(sf::Color::Black);
