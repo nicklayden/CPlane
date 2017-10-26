@@ -57,6 +57,16 @@ void Plot::scatter(std::vector<double> x, std::vector<double> y, sf::Color colou
 
 }
 
+void Plot::scatter(double x, double y, sf::Color colour)
+{
+    EventLoop();
+    sf::CircleShape pt(0.01);
+    pt.setOrigin(pt.getRadius(),pt.getRadius());
+    pt.setPosition(x,y);
+    pt.setFillColor(colour);
+    mainwindow.draw(pt);
+}
+
 void Plot::show()
 {
     while (mainwindow.isOpen())
@@ -169,4 +179,20 @@ void Plot::setTitle(std::string title)
 std::string Plot::toString(double number)
 {
 
+}
+
+void Plot::set_xlabel(std::string label, sf::Font font)
+{
+
+    xlabel.setFont(font);
+    xlabel.setString(label);
+    xlabel.setPosition(-320,-350);
+    xlabel.setCharacterSize(16);
+    xlabel.setColor(sf::Color::White);
+    mainwindow.draw(xlabel);
+}
+
+void Plot::set_ylabel(std::string)
+{
+    
 }

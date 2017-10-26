@@ -14,6 +14,7 @@ class Plot
         Plot(std::string title, float width = 5, float height = 5, int sizex = 800, int sizey = 800);
         void plot(std::vector<double> x, std::vector<double> y,  sf::Color color = sf::Color::Blue); 
         void scatter(std::vector<double> x, std::vector<double> y,  sf::Color color = sf::Color::Blue);
+        void scatter(double x, double y, sf::Color colour = sf::Color::Blue);
         void show();
 
         sf::RenderWindow mainwindow;
@@ -29,8 +30,13 @@ class Plot
         std::string toString(double number);
         void setxlim(double xmin, double xmax);
         void setylim(double ymin, double ymax);
+        void set_xlabel(std::string label, sf::Font font);
+        void set_ylabel(std::string);
         sf::View axesView;
         sf::View plotView;
+
+        sf::Text xlabel;
+        sf::Text ylabel;
 
     private:
         void DrawLines(std::vector<double> x, std::vector<double> y, sf::Color colour);
