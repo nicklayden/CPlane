@@ -10,6 +10,13 @@
         // Backward orbit from initial conditions.
         // xy3 = adams_bashforth_4step(-1 + 0.1*j, 0.1*j,Nsteps,xprime,yprime,0.3,beta[i], true);   
         
+
+    TO DO:
+        - Dump {x(t), y(t), t, beta} data to file for external plotting
+            - 3D plot of bifurcation diagrams as function of beta.
+        - Vector field? 
+
+
 */
 
 #include <iostream>
@@ -65,7 +72,7 @@ int main()
     // Range of alpha (damping) and beta (magnetic 'strength') values.
     std::vector<double> beta(100),alpha(100);
     for (size_t i = 0; i < beta.size(); i++) {
-        beta[i] = 0.8 + 0.01*i;
+        beta[i] = 0. + 0.02*i;
         alpha[i] = 0.1 + 0.005*i;
     }
 
@@ -78,10 +85,10 @@ int main()
     Plot plt4("bifurcation diagram",2,2,300,300);
     plt4.plotView.setCenter(1,0);
 
-    // plt.mainwindow.setFramerateLimit(60);
+    // plt.mainwindow.setFramerateLimit(10);
     while(plt.mainwindow.isOpen()) {
         // SEG FAULT CORE DUMPED ON RANDOM CLOSES OF THE WINDOWS ???????? NOT CONSISTENTLY HAPPENING!!
-        for (size_t i = 0; i < beta.size(); i++) {
+        for (int i = 0; i < beta.size(); i++) {
 
             std::complex<double> xeq = 1 - 1/beta[i]; // x component of the eq points.
             std::complex<double> root_xeq = std::sqrt(xeq); // complex sqrt from <complex> header
@@ -89,11 +96,15 @@ int main()
             yeqpoints[1] = 0;
             xeqpoints[2] = -root_xeq.real();
             yeqpoints[2] = 0;
-            for (size_t j = 0; j < 10; j++) {
+            for (int j = 0; j < 5; j++) {
                 // MAGNETO ELASTIC BEAM
+                xypts2 = adams_bashforth_4step(1,-j, Nsteps, xprime, yprime,0.1,beta[i]);
                 xypts = adams_bashforth_4step(1,j, Nsteps, xprime, yprime,0.1,beta[i]);
+
+                // xypts2 = adams_bashforth_4step()
                 // xypts2= adams_bashforth_4step(1,j, Nsteps, xprime, yprime, 0.1, beta[i],true);
                 plt.plot(xypts[0],xypts[1],sf::Color::Green); // phase plane
+                plt.plot(xypts2[0],xypts2[1],sf::Color::Green);
                 plt2.plot(xypts[2],xypts[0],sf::Color::Blue); // X-T plane
                 plt3.plot(xypts[2],xypts[1],sf::Color::Red);  // Y-T plane
             }
@@ -117,7 +128,8 @@ int main()
         }
         plt.EventLoop();  
         plt2.EventLoop();  
-        plt3.EventLoop();    
+        plt3.EventLoop();  
+        plt4.EventLoop();  
     }
     // plt.show();
 
