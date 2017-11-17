@@ -64,15 +64,18 @@ int main()
 
 
     // containers and Number of steps to run the solver for.
-    std::vector<std::vector<double> > xypts,xypts2,xy3;
+    std::vector<std::vector<double> > xypts,xypts2,xy3, xypts3,xypts4;
     std::vector<double> xeqpoints(3), yeqpoints(3);
     xeqpoints[0] = 0; yeqpoints[0] = 0; // point (0,0)
-    int Nsteps = 50000;
+    int Nsteps = 50000; // num time steps to integrate.
+    std::complex<double> xeq; // x component of the eq points.
+    std::complex<double> root_xeq; // complex sqrt from <complex> header
+
 
     // Range of alpha (damping) and beta (magnetic 'strength') values.
     std::vector<double> beta(100),alpha(100);
     for (size_t i = 0; i < beta.size(); i++) {
-        beta[i] = 0. + 0.02*i;
+        beta[i] = 0.7 + 0.01*i;
         alpha[i] = 0.1 + 0.005*i;
     }
 
@@ -98,18 +101,17 @@ int main()
             yeqpoints[2] = 0;
             for (int j = 0; j < 5; j++) {
                 // MAGNETO ELASTIC BEAM
-                xypts2 = adams_bashforth_4step(1,-j, Nsteps, xprime, yprime,0.1,beta[i]);
-                xypts = adams_bashforth_4step(1,j, Nsteps, xprime, yprime,0.1,beta[i]);
+                xypts2 = adams_bashforth_4step(-j,-j, Nsteps, xprime, yprime,0.1,beta[i]);
+                xypts = adams_bashforth_4step(j,j, Nsteps, xprime, yprime,0.1,beta[i]);
 
-                // xypts2 = adams_bashforth_4step()
-                // xypts2= adams_bashforth_4step(1,j, Nsteps, xprime, yprime, 0.1, beta[i],true);
+
                 plt.plot(xypts[0],xypts[1],sf::Color::Green); // phase plane
-                plt.plot(xypts2[0],xypts2[1],sf::Color::Green);
+                plt.plot(xypts2[0],xypts2[1],sf::Color::Green); // phase plane
                 plt2.plot(xypts[2],xypts[0],sf::Color::Blue); // X-T plane
                 plt3.plot(xypts[2],xypts[1],sf::Color::Red);  // Y-T plane
             }
 
-            plt.set_xlabel(std::string("nips"), font);
+            // plt.set_xlabel(std::string("nips"), font);
             plt4.scatter(beta[i],xeqpoints[1],sf::Color::Red);
             plt4.scatter(beta[i],xeqpoints[2],sf::Color::Red);
             plt4.mainwindow.display();
@@ -126,6 +128,7 @@ int main()
             plt.mainwindow.display();
             plt.mainwindow.clear(sf::Color::Black);
         }
+        plt4.mainwindow.clear();
         plt.EventLoop();  
         plt2.EventLoop();  
         plt3.EventLoop();  
@@ -139,11 +142,12 @@ int main()
 
 
 /*
-    Adams bashforth 4 step method. Works ok enough.
+    Adams bashforth 4 step method. Works ok enough. Will switch to RK4 when I have time.
 */
 std::vector<std::vector<double> > adams_bashforth_4step(double x0, double y0, int Nsteps,
-                             double (*f)(double, double,double,double), double (*g)(double, double,double,double),
-                             double a, double b,bool timereverse)
+                                                        double (*f)(double, double,double,double), 
+                                                        double (*g)(double, double,double,double),
+                                                        double a, double b,bool timereverse)
 {
     double xn,xn1,xn2,xn3;
     double tn,tn1,tn2,tn3;
