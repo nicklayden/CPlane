@@ -25,6 +25,10 @@
 #include <string>
 #include <sstream>
 #include <complex>
+#include <boost/numeric/odeint/integrate/integrate_const.hpp>
+#include <boost/numeric/odeint/stepper/adams_bashforth.hpp>
+
+namespace ni = boost::numeric::odeint;
 
 
 double yprime(double x, double y, double a, double b);
@@ -33,6 +37,28 @@ std::vector<std::vector<double> > adams_bashforth_4step(double x0, double y0, in
 std::string Numbertostring(std::string text, double num);
 std::string Complextostring(std::string name, std::complex<double> comp);
 
+void test_equation(const std::vector<double>& x, std::vector<double>& dxdt, const double t)
+{
+    dxdt[0] = x[1];
+    dxdt[1] = -2.*0.1*x[1] - x[0] + 1.2*x[0]*(1.-x[0]*x[0]);
+}
+
+struct push_back_state_and_time 
+{
+    std::vector<std::vector<double> >& m_states;
+    std::vector<double>& m_times;
+
+    push_back_state_and_time(std::vector<std::vector<double> >& states, std::vector<double>& times)
+    :m_states(states), m_times(times) { }
+
+    void operator()(const std::vector<double>& x, double t)
+    {
+        m_states.push_back(x);
+        m_times.push_back(t);
+    }
+
+
+};
 
 int main()
 {
@@ -60,7 +86,33 @@ int main()
     eq1.setPosition(-100,-350);
 
     //______________________________________________________________________________//
+    //______________________________________________________________________________//
+    // BOOST NUMERIC.ODEINT METHOD OF INTEGRATION.
 
+    std::vector<double> x(2);
+    std::vector<std::vector<double> > x_vec;
+    std::vector<double> times;
+    x[0] = 1.0; // initial state.
+    x[1] = 0.1;
+
+    ni::adams_bashforth<4, std::vector<double> > stepper;
+
+    ni::integrate_const(stepper,test_equation, x, 0.0,10.,0.001);
+
+    // std::cout << steps << std::endl;
+    std::vector<std::vector<double> > solution;
+
+    // my function solution method
+    solution = adams_bashforth_4step(1.0,0.1,10000, xprime, yprime,0.1,1.2);
+
+
+    for ( size_t i = 0; i < 2; i++) {
+        std::cout << "x= " << x[i] << std::endl;
+
+    }
+    std::cout << "mine= " << "\n" << solution[0][9999] << "\n" << solution[1][9999] << std::endl;
+
+    //______________________________________________________________________________//
 
 
     // containers and Number of steps to run the solver for.
@@ -79,62 +131,62 @@ int main()
         alpha[i] = 0.1 + 0.005*i;
     }
 
-    // Three Plots to plot the data.
-    Plot plt("CPlane",2,2);
-    Plot plt2("x(t)",50,5,600,600);
-    Plot plt3("y(t)",50,5,600,600);
-    plt2.plotView.setCenter(50./2., 0);
-    plt3.plotView.setCenter(50./2., 0);
-    Plot plt4("bifurcation diagram",2,2,300,300);
-    plt4.plotView.setCenter(1,0);
+    // // Three Plots to plot the data.
+    // Plot plt("CPlane",2,2);
+    // Plot plt2("x(t)",50,5,600,600);
+    // Plot plt3("y(t)",50,5,600,600);
+    // plt2.plotView.setCenter(50./2., 0);
+    // plt3.plotView.setCenter(50./2., 0);
+    // Plot plt4("bifurcation diagram",2,2,300,300);
+    // plt4.plotView.setCenter(1,0);
 
-    // plt.mainwindow.setFramerateLimit(10);
-    while(plt.mainwindow.isOpen()) {
-        // SEG FAULT CORE DUMPED ON RANDOM CLOSES OF THE WINDOWS ???????? NOT CONSISTENTLY HAPPENING!!
-        for (int i = 0; i < beta.size(); i++) {
+    // // plt.mainwindow.setFramerateLimit(10);
+    // while(plt.mainwindow.isOpen()) {
+    //     // SEG FAULT CORE DUMPED ON RANDOM CLOSES OF THE WINDOWS ???????? NOT CONSISTENTLY HAPPENING!!
+    //     for (int i = 0; i < beta.size(); i++) {
 
-            std::complex<double> xeq = 1 - 1/beta[i]; // x component of the eq points.
-            std::complex<double> root_xeq = std::sqrt(xeq); // complex sqrt from <complex> header
-            xeqpoints[1] = root_xeq.real(); // get the real part of the eq point.
-            yeqpoints[1] = 0;
-            xeqpoints[2] = -root_xeq.real();
-            yeqpoints[2] = 0;
-            for (int j = 0; j < 5; j++) {
-                // MAGNETO ELASTIC BEAM
-                xypts2 = adams_bashforth_4step(-j,-j, Nsteps, xprime, yprime,0.1,beta[i]);
-                xypts = adams_bashforth_4step(j,j, Nsteps, xprime, yprime,0.1,beta[i]);
+    //         std::complex<double> xeq = 1 - 1/beta[i]; // x component of the eq points.
+    //         std::complex<double> root_xeq = std::sqrt(xeq); // complex sqrt from <complex> header
+    //         xeqpoints[1] = root_xeq.real(); // get the real part of the eq point.
+    //         yeqpoints[1] = 0;
+    //         xeqpoints[2] = -root_xeq.real();
+    //         yeqpoints[2] = 0;
+    //         for (int j = 0; j < 5; j++) {
+    //             // MAGNETO ELASTIC BEAM
+    //             xypts2 = adams_bashforth_4step(-j,-j, Nsteps, xprime, yprime,0.1,beta[i]);
+    //             xypts = adams_bashforth_4step(j,j, Nsteps, xprime, yprime,0.1,beta[i]);
 
 
-                plt.plot(xypts[0],xypts[1],sf::Color::Green); // phase plane
-                plt.plot(xypts2[0],xypts2[1],sf::Color::Green); // phase plane
-                plt2.plot(xypts[2],xypts[0],sf::Color::Blue); // X-T plane
-                plt3.plot(xypts[2],xypts[1],sf::Color::Red);  // Y-T plane
-            }
+    //             plt.plot(xypts[0],xypts[1],sf::Color::Green); // phase plane
+    //             plt.plot(xypts2[0],xypts2[1],sf::Color::Green); // phase plane
+    //             plt2.plot(xypts[2],xypts[0],sf::Color::Blue); // X-T plane
+    //             plt3.plot(xypts[2],xypts[1],sf::Color::Red);  // Y-T plane
+    //         }
 
-            // plt.set_xlabel(std::string("nips"), font);
-            plt4.scatter(beta[i],xeqpoints[1],sf::Color::Red);
-            plt4.scatter(beta[i],xeqpoints[2],sf::Color::Red);
-            plt4.mainwindow.display();
-            plt2.mainwindow.display();
-            plt2.mainwindow.clear(sf::Color::Black);
-            plt3.mainwindow.display();
-            plt3.mainwindow.clear(sf::Color::Black);
-            plt.scatter(xeqpoints,yeqpoints, sf::Color::Red);
-            plt.mainwindow.setView(plt.axesView);
-            text.setString(Numbertostring("Beta =",beta[i]));
-            eq1.setString(Complextostring("x_eq",root_xeq));
-            plt.mainwindow.draw(text);
-            plt.mainwindow.draw(eq1);
-            plt.mainwindow.display();
-            plt.mainwindow.clear(sf::Color::Black);
-        }
-        plt4.mainwindow.clear();
-        plt.EventLoop();  
-        plt2.EventLoop();  
-        plt3.EventLoop();  
-        plt4.EventLoop();  
-    }
-    // plt.show();
+    //         // plt.set_xlabel(std::string("nips"), font);
+    //         plt4.scatter(beta[i],xeqpoints[1],sf::Color::Red);
+    //         plt4.scatter(beta[i],xeqpoints[2],sf::Color::Red);
+    //         plt4.mainwindow.display();
+    //         plt2.mainwindow.display();
+    //         plt2.mainwindow.clear(sf::Color::Black);
+    //         plt3.mainwindow.display();
+    //         plt3.mainwindow.clear(sf::Color::Black);
+    //         plt.scatter(xeqpoints,yeqpoints, sf::Color::Red);
+    //         plt.mainwindow.setView(plt.axesView);
+    //         text.setString(Numbertostring("Beta =",beta[i]));
+    //         eq1.setString(Complextostring("x_eq",root_xeq));
+    //         plt.mainwindow.draw(text);
+    //         plt.mainwindow.draw(eq1);
+    //         plt.mainwindow.display();
+    //         plt.mainwindow.clear(sf::Color::Black);
+    //     }
+    //     plt4.mainwindow.clear();
+    //     plt.EventLoop();  
+    //     plt2.EventLoop();  
+    //     plt3.EventLoop();  
+    //     plt4.EventLoop();  
+    // }
+    // // plt.show();
 
 
 }
