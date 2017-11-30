@@ -26,16 +26,17 @@
 #include <sstream>
 #include <complex>
 #include <boost/numeric/odeint/integrate/integrate_const.hpp>
-#include <boost/numeric/odeint/stepper/adams_bashforth.hpp>
+#include <boost/numeric/odeint.hpp>
 
 namespace ni = boost::numeric::odeint;
 
 
 double yprime(double x, double y, double a, double b);
 double xprime(double x, double y, double a, double b);
-std::vector<std::vector<double> > adams_bashforth_4step(double x0, double y0, int Nsteps, double (*f)(double, double,double,double), double (*g)(double, double,double,double), double a, double b, bool timereverse=false);
+std::vector<std::vector<double> > adams_bashforth_4step(double x0, double y0, int Nsteps, double (*f)(double,double,double,double), double (*g)(double,double,double,double), double a, double b, bool timereverse=false);
 std::string Numbertostring(std::string text, double num);
 std::string Complextostring(std::string name, std::complex<double> comp);
+std::vector<std::vector<double> > transpose_copy(std::vector<std::vector<double> > data);
 
 void test_equation(const std::vector<double>& x, std::vector<double>& dxdt, const double t)
 {
@@ -57,6 +58,20 @@ struct push_back_state_and_time
         m_times.push_back(t);
     }
 
+
+};
+
+class dynamical_system
+{
+public:
+    double  m_parameter;
+
+    dynamical_system(double parameter) :m_parameter(parameter) {}
+
+    void operator() (const std::vector<double>& x, std::vector<double>& dxdt, const double /*t*/){
+        dxdt[0] = x[1];
+        dxdt[1] = -2.*0.1*x[1] - x[0] + m_parameter*x[0]*(1.-x[0]*x[0]);
+    }
 
 };
 
@@ -90,27 +105,39 @@ int main()
     // BOOST NUMERIC.ODEINT METHOD OF INTEGRATION.
 
     std::vector<double> x(2);
-    std::vector<std::vector<double> > x_vec;
-    std::vector<double> times;
+    std::vector<std::vector<double> > x_vec, test_transpose,y2,test_transpose2;
+    std::vector<double> times,xstate,ystate, t2;
     x[0] = 1.0; // initial state.
     x[1] = 0.1;
 
-    ni::adams_bashforth<4, std::vector<double> > stepper;
+    dynamical_system syst(1.2);
 
-    ni::integrate_const(stepper,test_equation, x, 0.0,10.,0.001);
+    ni::runge_kutta4<std::vector<double> > stepper;
 
-    // std::cout << steps << std::endl;
-    std::vector<std::vector<double> > solution;
+    ni::integrate_const(stepper,test_equation, x, 50.,0.,-0.001, push_back_state_and_time(x_vec,times));
 
-    // my function solution method
-    solution = adams_bashforth_4step(1.0,0.1,10000, xprime, yprime,0.1,1.2);
+    x[0] = 1.0; // Note: Need to reset initial conditions if using the same vector for starting state.
+    x[1] = 0.1;
+    ni::integrate_const(stepper,test_equation, x, 0.,50.,0.001,push_back_state_and_time(y2,t2));
 
-
-    for ( size_t i = 0; i < 2; i++) {
-        std::cout << "x= " << x[i] << std::endl;
-
+    for(int i=0; i< times.size(); i++) {
+        xstate.push_back(x_vec[i][0]);
+        ystate.push_back(x_vec[i][1]);
     }
-    std::cout << "mine= " << "\n" << solution[0][9999] << "\n" << solution[1][9999] << std::endl;
+
+    test_transpose = transpose_copy(x_vec);
+    test_transpose2= transpose_copy(y2);
+
+
+    Plot plt_test("BOOST INTEGRATE",5,5);
+    while (plt_test.mainwindow.isOpen())
+    {
+        // plt_test.plot(xstate,ystate);
+        plt_test.plot(test_transpose[0], test_transpose[1], sf::Color::Red);
+        plt_test.plot(test_transpose2[0], test_transpose2[1], sf::Color::Red);
+        plt_test.mainwindow.display();
+        // plt_test.EventLoop();
+    }
 
     //______________________________________________________________________________//
 
@@ -131,8 +158,8 @@ int main()
         alpha[i] = 0.1 + 0.005*i;
     }
 
-    // // Three Plots to plot the data.
-    // Plot plt("CPlane",2,2);
+    // Three Plots to plot the data.
+    // Plot plt("CPlane",8,8);
     // Plot plt2("x(t)",50,5,600,600);
     // Plot plt3("y(t)",50,5,600,600);
     // plt2.plotView.setCenter(50./2., 0);
@@ -143,18 +170,19 @@ int main()
     // // plt.mainwindow.setFramerateLimit(10);
     // while(plt.mainwindow.isOpen()) {
     //     // SEG FAULT CORE DUMPED ON RANDOM CLOSES OF THE WINDOWS ???????? NOT CONSISTENTLY HAPPENING!!
+    //     // FORWARD DIRECTION OF ANIMATION
     //     for (int i = 0; i < beta.size(); i++) {
 
     //         std::complex<double> xeq = 1 - 1/beta[i]; // x component of the eq points.
     //         std::complex<double> root_xeq = std::sqrt(xeq); // complex sqrt from <complex> header
-    //         xeqpoints[1] = root_xeq.real(); // get the real part of the eq point.
+    //         xeqpoints[1] = -2; // get the real part of the eq point.
     //         yeqpoints[1] = 0;
-    //         xeqpoints[2] = -root_xeq.real();
+    //         xeqpoints[2] = 0;
     //         yeqpoints[2] = 0;
-    //         for (int j = 0; j < 5; j++) {
+    //         for (int j = 0; j < 10; j++) {
     //             // MAGNETO ELASTIC BEAM
-    //             xypts2 = adams_bashforth_4step(-j,-j, Nsteps, xprime, yprime,0.1,beta[i]);
-    //             xypts = adams_bashforth_4step(j,j, Nsteps, xprime, yprime,0.1,beta[i]);
+    //             xypts2 = adams_bashforth_4step(-2 + j,1, Nsteps, xprime, yprime,1,beta[i]);
+    //             xypts = adams_bashforth_4step(-2 + j,1, Nsteps, xprime, yprime,1,beta[i],true);
 
 
     //             plt.plot(xypts[0],xypts[1],sf::Color::Green); // phase plane
@@ -164,19 +192,19 @@ int main()
     //         }
 
     //         // plt.set_xlabel(std::string("nips"), font);
-    //         plt4.scatter(beta[i],xeqpoints[1],sf::Color::Red);
-    //         plt4.scatter(beta[i],xeqpoints[2],sf::Color::Red);
+    //         // plt4.scatter(beta[i],xeqpoints[1],sf::Color::Red);
+    //         // plt4.scatter(beta[i],xeqpoints[2],sf::Color::Red);
     //         plt4.mainwindow.display();
     //         plt2.mainwindow.display();
     //         plt2.mainwindow.clear(sf::Color::Black);
     //         plt3.mainwindow.display();
     //         plt3.mainwindow.clear(sf::Color::Black);
     //         plt.scatter(xeqpoints,yeqpoints, sf::Color::Red);
-    //         plt.mainwindow.setView(plt.axesView);
-    //         text.setString(Numbertostring("Beta =",beta[i]));
-    //         eq1.setString(Complextostring("x_eq",root_xeq));
-    //         plt.mainwindow.draw(text);
-    //         plt.mainwindow.draw(eq1);
+    //         // plt.mainwindow.setView(plt.axesView);
+    //         // text.setString(Numbertostring("Beta =",beta[i]));
+    //         // eq1.setString(Complextostring("x_eq",root_xeq));
+    //         // plt.mainwindow.draw(text);
+    //         // plt.mainwindow.draw(eq1);
     //         plt.mainwindow.display();
     //         plt.mainwindow.clear(sf::Color::Black);
     //     }
@@ -185,8 +213,54 @@ int main()
     //     plt2.EventLoop();  
     //     plt3.EventLoop();  
     //     plt4.EventLoop();  
-    // }
-    // // plt.show();
+
+
+        // //BACKWARD DIRECTION OF ANIMATION.
+        // for (int i = beta.size()-1; i > 0; i--) {
+
+        //     std::complex<double> xeq = 1 - 1/beta[i]; // x component of the eq points.
+        //     std::complex<double> root_xeq = std::sqrt(xeq); // complex sqrt from <complex> header
+        //     xeqpoints[1] = root_xeq.real(); // get the real part of the eq point.
+        //     yeqpoints[1] = 0;
+        //     xeqpoints[2] = -root_xeq.real();
+        //     yeqpoints[2] = 0;
+        //     for (int j = 0; j < 5; j++) {
+        //         // MAGNETO ELASTIC BEAM
+        //         xypts2 = adams_bashforth_4step(-j,-j, Nsteps, xprime, yprime,1,beta[i]);
+        //         xypts = adams_bashforth_4step(j,j, Nsteps, xprime, yprime,1,beta[i]);
+
+
+        //         plt.plot(xypts[0],xypts[1],sf::Color::Green); // phase plane
+        //         plt.plot(xypts2[0],xypts2[1],sf::Color::Green); // phase plane
+        //         plt2.plot(xypts[2],xypts[0],sf::Color::Blue); // X-T plane
+        //         plt3.plot(xypts[2],xypts[1],sf::Color::Red);  // Y-T plane
+        //     }
+
+        //     // plt.set_xlabel(std::string("nips"), font);
+        //     plt4.scatter(beta[i],xeqpoints[1],sf::Color::Red);
+        //     plt4.scatter(beta[i],xeqpoints[2],sf::Color::Red);
+        //     plt4.mainwindow.display();
+        //     plt2.mainwindow.display();
+        //     plt2.mainwindow.clear(sf::Color::Black);
+        //     plt3.mainwindow.display();
+        //     plt3.mainwindow.clear(sf::Color::Black);
+        //     plt.scatter(xeqpoints,yeqpoints, sf::Color::Red);
+        //     plt.mainwindow.setView(plt.axesView);
+        //     text.setString(Numbertostring("Beta =",beta[i]));
+        //     eq1.setString(Complextostring("x_eq",root_xeq));
+        //     plt.mainwindow.draw(text);
+        //     plt.mainwindow.draw(eq1);
+        //     plt.mainwindow.display();
+        //     plt.mainwindow.clear(sf::Color::Black);
+        // }
+        // plt4.mainwindow.clear();
+        // plt.EventLoop();  
+        // plt2.EventLoop();  
+        // plt3.EventLoop();  
+        // plt4.EventLoop(); 
+
+    // } // while
+    // plt.show();
 
 
 }
@@ -292,13 +366,13 @@ std::vector<std::vector<double> > adams_bashforth_4step(double x0, double y0, in
 double xprime(double x, double y, double a, double b)
 {
     // juan thesis eqn : x*(2*x*x - y*y - 2) - (sqrt(6)/2)*b*y*y;
-  return y;
+  return -2*x - (x*x + y*y);
 }
 
 double yprime(double x, double y, double a, double b)
 {
     // juan thesis eqn : y*(2*x*x - y*y + 1 + (sqrt(6)/2)*b*x );
-  return -2*a*y - x + b*x*(1-x*x);
+  return -(1.-x)*y;
 }
 
 
@@ -314,4 +388,18 @@ std::string Complextostring(std::string name,std::complex<double> comp)
     std::ostringstream ss;
     ss << name << " = " << comp.real() << " +i " << comp.imag();
     return ss.str();
+}
+
+std::vector<std::vector<double> > transpose_copy(std::vector<std::vector<double> > data) {
+    
+    // Assuming all inner vectors are same length. we can allocate space in advance.
+    std::vector<std::vector<double> > result(data[0].size(), std::vector<double>(data.size()));
+    
+    for (int i = 0; i < data[0].size(); i++) {
+        for (int j = 0; j < data.size(); j++) {
+            result[i][j] = data[j][i];
+        }
+    }
+    return result;
+
 }
