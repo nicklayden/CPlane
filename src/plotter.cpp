@@ -69,10 +69,8 @@ void Plot::scatter(double x, double y, sf::Color colour)
 
 void Plot::show()
 {
-    while (mainwindow.isOpen())
-    {
-        EventLoop();
-    }
+    mainwindow.display();
+    mainwindow.clear(sf::Color::Black);
 }
 
 void Plot::DrawLines(std::vector<double> x, std::vector<double> y, sf::Color colour)

@@ -69,8 +69,28 @@ public:
     dynamical_system(double parameter) :m_parameter(parameter) {}
 
     void operator() (const std::vector<double>& x, std::vector<double>& dxdt, const double /*t*/){
-        dxdt[0] = x[1];
-        dxdt[1] = -2.*0.1*x[1] - x[0] + m_parameter*x[0]*(1.-x[0]*x[0]);
+        dxdt[0] = -2*x[0] - (x[0]*x[0] + x[1]*x[1]);
+        dxdt[1] = -(1 - x[0])*x[1];
+    }
+
+};
+
+class quintessence
+{
+    // x' =  x*(2*x*x - y*y - 2) - c*b*y*y;
+    // y' =  y*(2*x*x - y*y + 1 + c*b*x );
+public:
+    double  lambda;
+
+    quintessence(double parameter) :lambda(parameter) {}
+
+    void operator() (const std::vector<double>& x, std::vector<double>& dxdt, const double /*t*/){
+        // dxdt[0] = -3.*x[0] + (3./sqrt(6))*lambda*x[1]*x[1] + x[0]*(3*x[0]*x[0] + (1. - x[0]*x[0] - x[1]*x[1]));
+        // dxdt[1] = -(sqrt(6)/2.)*lambda*x[0]*x[1] + (sqrt(3)/3.)*x[1]*( 3.*x[0]*x[0]  + (1. - x[0]*x[0] - x[1]*x[1]));
+        // dxdt[0] = x[0]*(2*x[0]*x[0] - x[1]*x[1] - 2) - lambda*x[1]*x[1];
+        // dxdt[0] = x[1]*(2*x[0]*x[0] - x[1]*x[1] + 1 + lambda*x[0]);
+        dxdt[0] = x[0]*x[0] + 3*x[1]*x[1] - 1;
+        dxdt[1] = -2*x[0]*x[1];
     }
 
 };
@@ -112,31 +132,56 @@ int main()
 
     dynamical_system syst(1.2);
 
-    ni::runge_kutta4<std::vector<double> > stepper;
+    ni::runge_kutta_dopri5<std::vector<double> > stepper;
 
-    ni::integrate_const(stepper,test_equation, x, 50.,0.,-0.001, push_back_state_and_time(x_vec,times));
+    // ni::integrate_const(stepper,syst, x, 50.,0.,-0.001, push_back_state_and_time(x_vec,times));
 
-    x[0] = 1.0; // Note: Need to reset initial conditions if using the same vector for starting state.
-    x[1] = 0.1;
-    ni::integrate_const(stepper,test_equation, x, 0.,50.,0.001,push_back_state_and_time(y2,t2));
+    // x[0] = 1.0; // Note: Need to reset initial conditions if using the same vector for starting state.
+    // x[1] = 0.1;
+    // ni::integrate_const(stepper,dynamical_system(1.2), x, 0.,50.,0.001,push_back_state_and_time(y2,t2));
 
-    for(int i=0; i< times.size(); i++) {
-        xstate.push_back(x_vec[i][0]);
-        ystate.push_back(x_vec[i][1]);
-    }
+    // for(int i=0; i< times.size(); i++) {
+    //     xstate.push_back(x_vec[i][0]);
+    //     ystate.push_back(x_vec[i][1]);
+    // }
 
-    test_transpose = transpose_copy(x_vec);
-    test_transpose2= transpose_copy(y2);
+    // test_transpose = transpose_copy(x_vec);
+    // test_transpose2= transpose_copy(y2);
 
 
-    Plot plt_test("BOOST INTEGRATE",5,5);
-    while (plt_test.mainwindow.isOpen())
-    {
-        // plt_test.plot(xstate,ystate);
-        plt_test.plot(test_transpose[0], test_transpose[1], sf::Color::Red);
-        plt_test.plot(test_transpose2[0], test_transpose2[1], sf::Color::Red);
-        plt_test.mainwindow.display();
-        // plt_test.EventLoop();
+    // Plot plt_test("BOOST INTEGRATE",5,5);
+    // while (plt_test.mainwindow.isOpen())
+    // {
+    //     // plt_test.plot(xstate,ystate);
+    //     plt_test.plot(test_transpose[0], test_transpose[1], sf::Color::Red);
+    //     plt_test.plot(test_transpose2[0], test_transpose2[1], sf::Color::Red);
+    //     plt_test.mainwindow.display();
+    //     // plt_test.EventLoop();
+    // }
+
+    Plot plt_animate("Animation test for odeint",8,8);
+    plt_animate.mainwindow.setFramerateLimit(10);
+    plt_animate.plotView.setCenter(sf::Vector2f(0,0.5));
+    while(plt_animate.mainwindow.isOpen()) {
+        for (size_t i = 0; i < 100; i++)
+        {
+            for (int j = 0; j < 1; j++)
+            {   
+                dynamical_system system2(1.2 + 0.1*i); x[0] = 0 ; x[1] = 0;
+                ni::integrate_const(stepper,system2, x, 0.,50.,0.001,push_back_state_and_time(y2,t2)); // forward solution
+                x[0] = 0; x[1] = 0; // reset initial conditions for back solution.
+                ni::integrate_const(stepper,system2, x, 50.,0.,-0.001, push_back_state_and_time(x_vec,times)); // backward solution
+                test_transpose2 = transpose_copy(y2);
+                test_transpose = transpose_copy(x_vec);
+                plt_animate.plot(test_transpose2[0], test_transpose2[1], sf::Color::Red);
+                plt_animate.plot(test_transpose[0], test_transpose[1], sf::Color::Red);
+                y2.clear(); t2.clear(); times.clear(); x_vec.clear();
+            }
+            // plt_animate.mainwindow.display();
+            // plt_animate.mainwindow.clear(sf::Color::Black);
+            plt_animate.show();
+        }
+        // plt_animate.EventLoop();
     }
 
     //______________________________________________________________________________//
