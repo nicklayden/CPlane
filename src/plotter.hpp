@@ -16,7 +16,8 @@ class Plot
         void scatter(std::vector<double> x, std::vector<double> y,  sf::Color color = sf::Color::Blue);
         void scatter(double x, double y, sf::Color colour = sf::Color::Blue);
         void show();
-
+        bool isOpen();
+        
         sf::RenderWindow mainwindow;
         // sf::Text texttitle;
         double xmax = .5;

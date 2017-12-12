@@ -194,3 +194,8 @@ void Plot::set_ylabel(std::string)
 {
     
 }
+
+bool Plot::isOpen()
+{
+    return mainwindow.isOpen();
+}

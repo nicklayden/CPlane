@@ -85,12 +85,12 @@ public:
     quintessence(double parameter) :lambda(parameter) {}
 
     void operator() (const std::vector<double>& x, std::vector<double>& dxdt, const double /*t*/){
-        // dxdt[0] = -3.*x[0] + (3./sqrt(6))*lambda*x[1]*x[1] + x[0]*(3*x[0]*x[0] + (1. - x[0]*x[0] - x[1]*x[1]));
-        // dxdt[1] = -(sqrt(6)/2.)*lambda*x[0]*x[1] + (sqrt(3)/3.)*x[1]*( 3.*x[0]*x[0]  + (1. - x[0]*x[0] - x[1]*x[1]));
+        dxdt[0] = x[0]*(2*x[0]*x[0] - x[1]*x[1] - 2) + (sqrt(6.)/2.)*lambda*x[1]*x[1] ;
+        dxdt[1] = x[1]*(-lambda*(sqrt(6.)/2.)*x[0] + 2*x[0]*x[0] - x[1]*x[1] +1 );
         // dxdt[0] = x[0]*(2*x[0]*x[0] - x[1]*x[1] - 2) - lambda*x[1]*x[1];
         // dxdt[0] = x[1]*(2*x[0]*x[0] - x[1]*x[1] + 1 + lambda*x[0]);
-        dxdt[0] = x[0]*x[0] + 3*x[1]*x[1] - 1;
-        dxdt[1] = -2*x[0]*x[1];
+        // dxdt[0] = x[0]*x[0] + 3*x[1]*x[1] - 1;
+        // dxdt[1] = -2*x[0]*x[1];
     }
 
 };
@@ -159,29 +159,27 @@ int main()
     //     // plt_test.EventLoop();
     // }
 
-    Plot plt_animate("Animation test for odeint",8,8);
-    plt_animate.mainwindow.setFramerateLimit(10);
+    Plot plt_animate("Animation test for odeint",4,2, 800,400);
+    // plt_animate.mainwindow.setFramerateLimit(10);
     plt_animate.plotView.setCenter(sf::Vector2f(0,0.5));
     while(plt_animate.mainwindow.isOpen()) {
-        for (size_t i = 0; i < 100; i++)
+        for (size_t i = 0; i < 300; i++)
         {
-            for (int j = 0; j < 1; j++)
+            for (int j = 0; j < 11; j++)
             {   
-                dynamical_system system2(1.2 + 0.1*i); x[0] = 0 ; x[1] = 0;
-                ni::integrate_const(stepper,system2, x, 0.,50.,0.001,push_back_state_and_time(y2,t2)); // forward solution
-                x[0] = 0; x[1] = 0; // reset initial conditions for back solution.
-                ni::integrate_const(stepper,system2, x, 50.,0.,-0.001, push_back_state_and_time(x_vec,times)); // backward solution
+                quintessence system2(0.1 + 0.05*i); x[0] = 0.3 + 0.05*j; x[1] = 0.05*j;
+                ni::integrate_const(stepper,system2, x, 0.,10.,0.001,push_back_state_and_time(y2,t2)); // forward solution
+                x[0] = 0.3 + 0.05*j; x[1] = 0.05*j; // reset initial conditions for back solution.
+                ni::integrate_const(stepper,system2, x, 5.,0.,-0.001, push_back_state_and_time(x_vec,times)); // backward solution
                 test_transpose2 = transpose_copy(y2);
                 test_transpose = transpose_copy(x_vec);
                 plt_animate.plot(test_transpose2[0], test_transpose2[1], sf::Color::Red);
                 plt_animate.plot(test_transpose[0], test_transpose[1], sf::Color::Red);
                 y2.clear(); t2.clear(); times.clear(); x_vec.clear();
             }
-            // plt_animate.mainwindow.display();
-            // plt_animate.mainwindow.clear(sf::Color::Black);
             plt_animate.show();
         }
-        // plt_animate.EventLoop();
+        plt_animate.EventLoop();
     }
 
     //______________________________________________________________________________//
@@ -196,14 +194,14 @@ int main()
     std::complex<double> root_xeq; // complex sqrt from <complex> header
 
 
-    // Range of alpha (damping) and beta (magnetic 'strength') values.
-    std::vector<double> beta(100),alpha(100);
-    for (size_t i = 0; i < beta.size(); i++) {
-        beta[i] = 0.7 + 0.01*i;
-        alpha[i] = 0.1 + 0.005*i;
-    }
+    // // Range of alpha (damping) and beta (magnetic 'strength') values.
+    // std::vector<double> beta(100),alpha(100);
+    // for (size_t i = 0; i < beta.size(); i++) {
+    //     beta[i] = 0.7 + 0.01*i;
+    //     alpha[i] = 0.1 + 0.005*i;
+    // }
 
-    // Three Plots to plot the data.
+    // // Three Plots to plot the data.
     // Plot plt("CPlane",8,8);
     // Plot plt2("x(t)",50,5,600,600);
     // Plot plt3("y(t)",50,5,600,600);
@@ -260,49 +258,49 @@ int main()
     //     plt4.EventLoop();  
 
 
-        // //BACKWARD DIRECTION OF ANIMATION.
-        // for (int i = beta.size()-1; i > 0; i--) {
+    //     //BACKWARD DIRECTION OF ANIMATION.
+    //     for (int i = beta.size()-1; i > 0; i--) {
 
-        //     std::complex<double> xeq = 1 - 1/beta[i]; // x component of the eq points.
-        //     std::complex<double> root_xeq = std::sqrt(xeq); // complex sqrt from <complex> header
-        //     xeqpoints[1] = root_xeq.real(); // get the real part of the eq point.
-        //     yeqpoints[1] = 0;
-        //     xeqpoints[2] = -root_xeq.real();
-        //     yeqpoints[2] = 0;
-        //     for (int j = 0; j < 5; j++) {
-        //         // MAGNETO ELASTIC BEAM
-        //         xypts2 = adams_bashforth_4step(-j,-j, Nsteps, xprime, yprime,1,beta[i]);
-        //         xypts = adams_bashforth_4step(j,j, Nsteps, xprime, yprime,1,beta[i]);
+    //         std::complex<double> xeq = 1 - 1/beta[i]; // x component of the eq points.
+    //         std::complex<double> root_xeq = std::sqrt(xeq); // complex sqrt from <complex> header
+    //         xeqpoints[1] = root_xeq.real(); // get the real part of the eq point.
+    //         yeqpoints[1] = 0;
+    //         xeqpoints[2] = -root_xeq.real();
+    //         yeqpoints[2] = 0;
+    //         for (int j = 0; j < 5; j++) {
+    //             // MAGNETO ELASTIC BEAM
+    //             xypts2 = adams_bashforth_4step(-j,-j, Nsteps, xprime, yprime,1,beta[i]);
+    //             xypts = adams_bashforth_4step(j,j, Nsteps, xprime, yprime,1,beta[i]);
 
 
-        //         plt.plot(xypts[0],xypts[1],sf::Color::Green); // phase plane
-        //         plt.plot(xypts2[0],xypts2[1],sf::Color::Green); // phase plane
-        //         plt2.plot(xypts[2],xypts[0],sf::Color::Blue); // X-T plane
-        //         plt3.plot(xypts[2],xypts[1],sf::Color::Red);  // Y-T plane
-        //     }
+    //             plt.plot(xypts[0],xypts[1],sf::Color::Green); // phase plane
+    //             plt.plot(xypts2[0],xypts2[1],sf::Color::Green); // phase plane
+    //             plt2.plot(xypts[2],xypts[0],sf::Color::Blue); // X-T plane
+    //             plt3.plot(xypts[2],xypts[1],sf::Color::Red);  // Y-T plane
+    //         }
 
-        //     // plt.set_xlabel(std::string("nips"), font);
-        //     plt4.scatter(beta[i],xeqpoints[1],sf::Color::Red);
-        //     plt4.scatter(beta[i],xeqpoints[2],sf::Color::Red);
-        //     plt4.mainwindow.display();
-        //     plt2.mainwindow.display();
-        //     plt2.mainwindow.clear(sf::Color::Black);
-        //     plt3.mainwindow.display();
-        //     plt3.mainwindow.clear(sf::Color::Black);
-        //     plt.scatter(xeqpoints,yeqpoints, sf::Color::Red);
-        //     plt.mainwindow.setView(plt.axesView);
-        //     text.setString(Numbertostring("Beta =",beta[i]));
-        //     eq1.setString(Complextostring("x_eq",root_xeq));
-        //     plt.mainwindow.draw(text);
-        //     plt.mainwindow.draw(eq1);
-        //     plt.mainwindow.display();
-        //     plt.mainwindow.clear(sf::Color::Black);
-        // }
-        // plt4.mainwindow.clear();
-        // plt.EventLoop();  
-        // plt2.EventLoop();  
-        // plt3.EventLoop();  
-        // plt4.EventLoop(); 
+    //         // plt.set_xlabel(std::string("nips"), font);
+    //         plt4.scatter(beta[i],xeqpoints[1],sf::Color::Red);
+    //         plt4.scatter(beta[i],xeqpoints[2],sf::Color::Red);
+    //         plt4.mainwindow.display();
+    //         plt2.mainwindow.display();
+    //         plt2.mainwindow.clear(sf::Color::Black);
+    //         plt3.mainwindow.display();
+    //         plt3.mainwindow.clear(sf::Color::Black);
+    //         plt.scatter(xeqpoints,yeqpoints, sf::Color::Red);
+    //         plt.mainwindow.setView(plt.axesView);
+    //         text.setString(Numbertostring("Beta =",beta[i]));
+    //         eq1.setString(Complextostring("x_eq",root_xeq));
+    //         plt.mainwindow.draw(text);
+    //         plt.mainwindow.draw(eq1);
+    //         plt.mainwindow.display();
+    //         plt.mainwindow.clear(sf::Color::Black);
+    //     }
+    //     plt4.mainwindow.clear();
+    //     plt.EventLoop();  
+    //     plt2.EventLoop();  
+    //     plt3.EventLoop();  
+    //     plt4.EventLoop(); 
 
     // } // while
     // plt.show();
