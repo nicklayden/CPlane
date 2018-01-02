@@ -31,18 +31,13 @@
 namespace ni = boost::numeric::odeint;
 
 
-double yprime(double x, double y, double a, double b);
-double xprime(double x, double y, double a, double b);
-std::vector<std::vector<double> > adams_bashforth_4step(double x0, double y0, int Nsteps, double (*f)(double,double,double,double), double (*g)(double,double,double,double), double a, double b, bool timereverse=false);
 std::string Numbertostring(std::string text, double num);
 std::string Complextostring(std::string name, std::complex<double> comp);
 std::vector<std::vector<double> > transpose_copy(std::vector<std::vector<double> > data);
+void eq_pt(std::vector<double>& x, std::vector<double>& y, double lambda);
+void bif_pt1(std::vector<double>& x, std::vector<double>& y);
+void bif_pt2(std::vector<double>& x, std::vector<double>& y);
 
-void test_equation(const std::vector<double>& x, std::vector<double>& dxdt, const double t)
-{
-    dxdt[0] = x[1];
-    dxdt[1] = -2.*0.1*x[1] - x[0] + 1.2*x[0]*(1.-x[0]*x[0]);
-}
 
 struct push_back_state_and_time 
 {
@@ -61,6 +56,21 @@ struct push_back_state_and_time
 
 };
 
+class sean_problem
+{
+public:
+    double m_par;
+    sean_problem(double par): m_par(par) {}
+    // exponential potential with constant epsilon background
+
+    void operator() (const std::vector<double>& x, std::vector<double>& dxdt, const double /* t */) {
+        dxdt[0] = x[0]*(-2 + 2*x[0]*x[0] - x[1]*x[1] - x[2]*x[2]) + (sqrt(6.)/2.)*m_par*x[2]*x[2];
+        dxdt[1] = x[1]*(1 + 2*x[0]*x[0] - x[1]*x[1] - x[2]*x[2]);
+        dxdt[2] = x[2]*((sqrt(6.)/2.)*m_par*x[0] + 3*x[0]*x[0] + 1 - x[0]*x[0] - x[1]*x[1] - x[2]*x[2] );
+    }
+};
+
+
 class dynamical_system
 {
 public:
@@ -77,8 +87,6 @@ public:
 
 class quintessence
 {
-    // x' =  x*(2*x*x - y*y - 2) - c*b*y*y;
-    // y' =  y*(2*x*x - y*y + 1 + c*b*x );
 public:
     double  lambda;
 
@@ -87,10 +95,6 @@ public:
     void operator() (const std::vector<double>& x, std::vector<double>& dxdt, const double /*t*/){
         dxdt[0] = x[0]*(2*x[0]*x[0] - x[1]*x[1] - 2) + (sqrt(6.)/2.)*lambda*x[1]*x[1] ;
         dxdt[1] = x[1]*(-lambda*(sqrt(6.)/2.)*x[0] + 2*x[0]*x[0] - x[1]*x[1] +1 );
-        // dxdt[0] = x[0]*(2*x[0]*x[0] - x[1]*x[1] - 2) - lambda*x[1]*x[1];
-        // dxdt[0] = x[1]*(2*x[0]*x[0] - x[1]*x[1] + 1 + lambda*x[0]);
-        // dxdt[0] = x[0]*x[0] + 3*x[1]*x[1] - 1;
-        // dxdt[1] = -2*x[0]*x[1];
     }
 
 };
@@ -101,24 +105,24 @@ int main()
     /*
         Screen Text */
 
-    sf::Font font;
-    sf::Text text, eq1,eq2,eq3;
-    if (!font.loadFromFile("OpenSans-Regular.ttf")) {
-        return 1;
-    }
+    // sf::Font font;
+    // sf::Text text, eq1,eq2,eq3;
+    // if (!font.loadFromFile("OpenSans-Regular.ttf")) {
+    //     return 1;
+    // }
 
-    text.setFont(font);
-    text.setString("Test");
-    text.setCharacterSize(16);
-    text.setColor(sf::Color::White);
-    text.setPosition(-320,-350);
+    // text.setFont(font);
+    // text.setString("Test");
+    // text.setCharacterSize(16);
+    // text.setColor(sf::Color::White);
+    // text.setPosition(-320,-350);
 
 
-    eq1.setFont(font);
-    eq1.setString("Test");
-    eq1.setCharacterSize(16);
-    eq1.setColor(sf::Color::White);
-    eq1.setPosition(-100,-350);
+    // eq1.setFont(font);
+    // eq1.setString("Test");
+    // eq1.setCharacterSize(16);
+    // eq1.setColor(sf::Color::White);
+    // eq1.setPosition(-100,-350);
 
     //______________________________________________________________________________//
     //______________________________________________________________________________//
@@ -127,296 +131,99 @@ int main()
     std::vector<double> x(2);
     std::vector<std::vector<double> > x_vec, test_transpose,y2,test_transpose2;
     std::vector<double> times,xstate,ystate, t2;
-    x[0] = 1.0; // initial state.
-    x[1] = 0.1;
 
-    dynamical_system syst(1.2);
+    std::vector<double> circle, cx, cy;
+    // std::vector<double> range;
+    for (int i = 0; i < 200; i++) {
+        float angle = M_PI*i/200;
+        cx.push_back(cos(angle));
+        cy.push_back(sin(angle));
+    }
 
+
+    // Integration method
     ni::runge_kutta_dopri5<std::vector<double> > stepper;
 
-    // ni::integrate_const(stepper,syst, x, 50.,0.,-0.001, push_back_state_and_time(x_vec,times));
+    std::vector<double> x_eq, y_eq;
+    std::vector<double> x_bif, y_bif;
 
-    // x[0] = 1.0; // Note: Need to reset initial conditions if using the same vector for starting state.
-    // x[1] = 0.1;
-    // ni::integrate_const(stepper,dynamical_system(1.2), x, 0.,50.,0.001,push_back_state_and_time(y2,t2));
+    // bifurcation points
+    bif_pt1(x_bif,y_bif);
+    bif_pt2(x_bif,y_bif);
 
-    // for(int i=0; i< times.size(); i++) {
-    //     xstate.push_back(x_vec[i][0]);
-    //     ystate.push_back(x_vec[i][1]);
-    // }
-
-    // test_transpose = transpose_copy(x_vec);
-    // test_transpose2= transpose_copy(y2);
-
-
-    // Plot plt_test("BOOST INTEGRATE",5,5);
-    // while (plt_test.mainwindow.isOpen())
-    // {
-    //     // plt_test.plot(xstate,ystate);
-    //     plt_test.plot(test_transpose[0], test_transpose[1], sf::Color::Red);
-    //     plt_test.plot(test_transpose2[0], test_transpose2[1], sf::Color::Red);
-    //     plt_test.mainwindow.display();
-    //     // plt_test.EventLoop();
-    // }
 
     Plot plt_animate("Animation test for odeint",4,2, 800,400);
-    // plt_animate.mainwindow.setFramerateLimit(10);
+    // plt_animate.mainwindow.setFramerateLimit(15);
     plt_animate.plotView.setCenter(sf::Vector2f(0,0.5));
+
+    // Plot slices
+    // Plot xy("XY plane",4,2,800,400);
+    // Plot zx("ZX plane",4,2,800,400);
+    // Plot yz("YZ plane",4,2,800,400);
+    // xy.plotView.setCenter(sf::Vector2f(0,0.5));
+    // zx.plotView.setCenter(sf::Vector2f(0,0.5));
+    // yz.plotView.setCenter(sf::Vector2f(0,0.5));
+
+
+
     while(plt_animate.mainwindow.isOpen()) {
-        for (size_t i = 0; i < 300; i++)
+        for (size_t i = 0; i < 250; i++)
         {
-            for (int j = 0; j < 11; j++)
+            double lambda = 0.01*i;
+            for (int j = 0; j < 20; j++)
             {   
-                quintessence system2(0.1 + 0.05*i); x[0] = 0.3 + 0.05*j; x[1] = 0.05*j;
-                ni::integrate_const(stepper,system2, x, 0.,10.,0.001,push_back_state_and_time(y2,t2)); // forward solution
-                x[0] = 0.3 + 0.05*j; x[1] = 0.05*j; // reset initial conditions for back solution.
-                ni::integrate_const(stepper,system2, x, 5.,0.,-0.001, push_back_state_and_time(x_vec,times)); // backward solution
+                quintessence system2(lambda); 
+                
+                x[0] = -sqrt(3)/2. + sqrt(3)*j/20; x[1] = 0.5; //+ 0.005*j; //x[2] = 0.2 + 0.005*j;
+                ni::integrate_const(stepper,system2, x, 0.,5.,0.001,push_back_state_and_time(y2,t2)); // forward solution
+
+                x[0] = -sqrt(3)/2 + sqrt(3)*j/20; x[1] = 0.5; //+ 0.005*j; //x[2] = 0.2 + 0.005*j;// reset initial conditions for back solution.
+                ni::integrate_adaptive(stepper,system2, x, 5.,0.,-0.001, push_back_state_and_time(x_vec,times)); // backward solution
+
+                // transposing Nx2 vector into 2XN
                 test_transpose2 = transpose_copy(y2);
                 test_transpose = transpose_copy(x_vec);
+
+                // plot solution curves in phase plane
                 plt_animate.plot(test_transpose2[0], test_transpose2[1], sf::Color::Red);
                 plt_animate.plot(test_transpose[0], test_transpose[1], sf::Color::Red);
-                y2.clear(); t2.clear(); times.clear(); x_vec.clear();
+
+                // xy.plot(test_transpose2[0], test_transpose2[1], sf::Color::Red);
+                // xy.plot(test_transpose[0], test_transpose[1], sf::Color::Red);
+
+                // zx.plot(test_transpose2[0], test_transpose2[2], sf::Color::Red);
+                // zx.plot(test_transpose[0], test_transpose[2], sf::Color::Red);
+                
+                // yz.plot(test_transpose2[2], test_transpose2[1], sf::Color::Red);
+                // yz.plot(test_transpose[2], test_transpose[1], sf::Color::Red);
+
+
+                // Clear vectors for next solution curve.
+                y2.clear(); t2.clear(); times.clear(); x_vec.clear(); 
             }
+
+            // // plot eq points (non trivial)
+            eq_pt(x_eq,y_eq,lambda);
+            plt_animate.plot(cx,cy);
+            plt_animate.scatter(x_eq, y_eq, sf::Color::Cyan);
+            plt_animate.scatter(x_bif, y_bif, sf::Color::Green);
             plt_animate.show();
+            // xy.show();
+            // zx.show();
+            // yz.show();
+            x_eq.clear(); y_eq.clear();
+            x_eq.push_back(0);x_eq.push_back(1);x_eq.push_back(-1); 
+            y_eq.push_back(0);y_eq.push_back(0);y_eq.push_back(0);
+        
         }
         plt_animate.EventLoop();
-    }
+        // xy.EventLoop();
+        // zx.EventLoop();
+        // yz.EventLoop();
+    } // end while
 
-    //______________________________________________________________________________//
+} // end main
 
-
-    // containers and Number of steps to run the solver for.
-    std::vector<std::vector<double> > xypts,xypts2,xy3, xypts3,xypts4;
-    std::vector<double> xeqpoints(3), yeqpoints(3);
-    xeqpoints[0] = 0; yeqpoints[0] = 0; // point (0,0)
-    int Nsteps = 50000; // num time steps to integrate.
-    std::complex<double> xeq; // x component of the eq points.
-    std::complex<double> root_xeq; // complex sqrt from <complex> header
-
-
-    // // Range of alpha (damping) and beta (magnetic 'strength') values.
-    // std::vector<double> beta(100),alpha(100);
-    // for (size_t i = 0; i < beta.size(); i++) {
-    //     beta[i] = 0.7 + 0.01*i;
-    //     alpha[i] = 0.1 + 0.005*i;
-    // }
-
-    // // Three Plots to plot the data.
-    // Plot plt("CPlane",8,8);
-    // Plot plt2("x(t)",50,5,600,600);
-    // Plot plt3("y(t)",50,5,600,600);
-    // plt2.plotView.setCenter(50./2., 0);
-    // plt3.plotView.setCenter(50./2., 0);
-    // Plot plt4("bifurcation diagram",2,2,300,300);
-    // plt4.plotView.setCenter(1,0);
-
-    // // plt.mainwindow.setFramerateLimit(10);
-    // while(plt.mainwindow.isOpen()) {
-    //     // SEG FAULT CORE DUMPED ON RANDOM CLOSES OF THE WINDOWS ???????? NOT CONSISTENTLY HAPPENING!!
-    //     // FORWARD DIRECTION OF ANIMATION
-    //     for (int i = 0; i < beta.size(); i++) {
-
-    //         std::complex<double> xeq = 1 - 1/beta[i]; // x component of the eq points.
-    //         std::complex<double> root_xeq = std::sqrt(xeq); // complex sqrt from <complex> header
-    //         xeqpoints[1] = -2; // get the real part of the eq point.
-    //         yeqpoints[1] = 0;
-    //         xeqpoints[2] = 0;
-    //         yeqpoints[2] = 0;
-    //         for (int j = 0; j < 10; j++) {
-    //             // MAGNETO ELASTIC BEAM
-    //             xypts2 = adams_bashforth_4step(-2 + j,1, Nsteps, xprime, yprime,1,beta[i]);
-    //             xypts = adams_bashforth_4step(-2 + j,1, Nsteps, xprime, yprime,1,beta[i],true);
-
-
-    //             plt.plot(xypts[0],xypts[1],sf::Color::Green); // phase plane
-    //             plt.plot(xypts2[0],xypts2[1],sf::Color::Green); // phase plane
-    //             plt2.plot(xypts[2],xypts[0],sf::Color::Blue); // X-T plane
-    //             plt3.plot(xypts[2],xypts[1],sf::Color::Red);  // Y-T plane
-    //         }
-
-    //         // plt.set_xlabel(std::string("nips"), font);
-    //         // plt4.scatter(beta[i],xeqpoints[1],sf::Color::Red);
-    //         // plt4.scatter(beta[i],xeqpoints[2],sf::Color::Red);
-    //         plt4.mainwindow.display();
-    //         plt2.mainwindow.display();
-    //         plt2.mainwindow.clear(sf::Color::Black);
-    //         plt3.mainwindow.display();
-    //         plt3.mainwindow.clear(sf::Color::Black);
-    //         plt.scatter(xeqpoints,yeqpoints, sf::Color::Red);
-    //         // plt.mainwindow.setView(plt.axesView);
-    //         // text.setString(Numbertostring("Beta =",beta[i]));
-    //         // eq1.setString(Complextostring("x_eq",root_xeq));
-    //         // plt.mainwindow.draw(text);
-    //         // plt.mainwindow.draw(eq1);
-    //         plt.mainwindow.display();
-    //         plt.mainwindow.clear(sf::Color::Black);
-    //     }
-    //     plt4.mainwindow.clear();
-    //     plt.EventLoop();  
-    //     plt2.EventLoop();  
-    //     plt3.EventLoop();  
-    //     plt4.EventLoop();  
-
-
-    //     //BACKWARD DIRECTION OF ANIMATION.
-    //     for (int i = beta.size()-1; i > 0; i--) {
-
-    //         std::complex<double> xeq = 1 - 1/beta[i]; // x component of the eq points.
-    //         std::complex<double> root_xeq = std::sqrt(xeq); // complex sqrt from <complex> header
-    //         xeqpoints[1] = root_xeq.real(); // get the real part of the eq point.
-    //         yeqpoints[1] = 0;
-    //         xeqpoints[2] = -root_xeq.real();
-    //         yeqpoints[2] = 0;
-    //         for (int j = 0; j < 5; j++) {
-    //             // MAGNETO ELASTIC BEAM
-    //             xypts2 = adams_bashforth_4step(-j,-j, Nsteps, xprime, yprime,1,beta[i]);
-    //             xypts = adams_bashforth_4step(j,j, Nsteps, xprime, yprime,1,beta[i]);
-
-
-    //             plt.plot(xypts[0],xypts[1],sf::Color::Green); // phase plane
-    //             plt.plot(xypts2[0],xypts2[1],sf::Color::Green); // phase plane
-    //             plt2.plot(xypts[2],xypts[0],sf::Color::Blue); // X-T plane
-    //             plt3.plot(xypts[2],xypts[1],sf::Color::Red);  // Y-T plane
-    //         }
-
-    //         // plt.set_xlabel(std::string("nips"), font);
-    //         plt4.scatter(beta[i],xeqpoints[1],sf::Color::Red);
-    //         plt4.scatter(beta[i],xeqpoints[2],sf::Color::Red);
-    //         plt4.mainwindow.display();
-    //         plt2.mainwindow.display();
-    //         plt2.mainwindow.clear(sf::Color::Black);
-    //         plt3.mainwindow.display();
-    //         plt3.mainwindow.clear(sf::Color::Black);
-    //         plt.scatter(xeqpoints,yeqpoints, sf::Color::Red);
-    //         plt.mainwindow.setView(plt.axesView);
-    //         text.setString(Numbertostring("Beta =",beta[i]));
-    //         eq1.setString(Complextostring("x_eq",root_xeq));
-    //         plt.mainwindow.draw(text);
-    //         plt.mainwindow.draw(eq1);
-    //         plt.mainwindow.display();
-    //         plt.mainwindow.clear(sf::Color::Black);
-    //     }
-    //     plt4.mainwindow.clear();
-    //     plt.EventLoop();  
-    //     plt2.EventLoop();  
-    //     plt3.EventLoop();  
-    //     plt4.EventLoop(); 
-
-    // } // while
-    // plt.show();
-
-
-}
-
-
-
-/*
-    Adams bashforth 4 step method. Works ok enough. Will switch to RK4 when I have time.
-*/
-std::vector<std::vector<double> > adams_bashforth_4step(double x0, double y0, int Nsteps,
-                                                        double (*f)(double, double,double,double), 
-                                                        double (*g)(double, double,double,double),
-                                                        double a, double b,bool timereverse)
-{
-    double xn,xn1,xn2,xn3;
-    double tn,tn1,tn2,tn3;
-    double yn,yn1,yn2,yn3;
-    double h = 0.001;
-    xn = x0;
-    yn = y0;
-    tn = 0.0;
-    std::vector<std::vector<double> > vals;
-    std::vector<double> xvalues(Nsteps), yvalues(Nsteps), timevals(Nsteps);
-
-
-    // Initializing the AB4 method with euler steps:
-    if (!timereverse) {
-        tn1 = tn + h;
-        yn1 = yn + h*f(xn,yn,a,b);
-        xn1 = xn + h*g(xn,yn,a,b);
-
-        tn2 = tn1 + h;
-        yn2 = yn1 + h*f(xn1,yn1,a,b);
-        xn2 = xn1 + h*g(xn1,yn1,a,b);
-
-        tn3 = tn2 + h;
-        yn3 = yn2 + h*f(xn2,yn2,a,b);
-        xn3 = xn2 + h*g(xn2,yn2,a,b);
-    } else {
-        tn1 = tn - h;
-        yn1 = yn - h*f(xn,yn,a,b);
-        xn1 = xn - h*g(xn,yn,a,b);
-    
-        tn2 = tn1 - h;
-        yn2 = yn1 - h*f(xn1,yn1,a,b);
-        xn2 = xn1 - h*g(xn1,yn1,a,b);
-    
-        tn3 = tn2 - h;
-        yn3 = yn2 - h*f(xn2,yn2,a,b);
-        xn3 = xn2 - h*g(xn2,yn2,a,b);
-    
-    }
-    // Solving the equations.
-    if (!timereverse) {
-        for (size_t i = 0; i < Nsteps; i++) {
-
-            yn3 += (h/24.0)*( 55.0*(g(xn3,yn3,a,b)) - 59.0*(g(xn2,yn2,a,b)) + 37.0*(g(xn1,yn1,a,b)) - 9.0*(g(xn,yn,a,b)));
-            xn3 += (h/24.0)*( 55.0*(f(xn3,yn3,a,b)) - 59.0*(f(xn2,yn2,a,b)) + 37.0*(f(xn1,yn1,a,b)) - 9.0*(f(xn,yn,a,b)));
-            yn = yn1;
-            tn = tn1;
-            xn = xn1;
-
-            yn1 = yn2;
-            tn1 = tn2;
-            xn1 = xn2;
-
-            yn2 = yn3;
-            tn2 = tn3;
-            xn2 = xn3;
-
-            tn3 += h;
-            timevals[i] = tn3;
-            xvalues[i] = xn3;
-            yvalues[i] = yn3;
-        }
-    } else {
-        for (size_t i = 0; i < Nsteps; i++) {
-
-            yn3 -= (h/24.0)*( 55.0*(g(xn3,yn3,a,b)) - 59.0*(g(xn2,yn2,a,b)) + 37.0*(g(xn1,yn1,a,b)) - 9.0*(g(xn,yn,a,b)));
-            xn3 -= (h/24.0)*( 55.0*(f(xn3,yn3,a,b)) - 59.0*(f(xn2,yn2,a,b)) + 37.0*(f(xn1,yn1,a,b)) - 9.0*(f(xn,yn,a,b)));
-            yn = yn1;
-            tn = tn1;
-            xn = xn1;
-
-            yn1 = yn2;
-            tn1 = tn2;
-            xn1 = xn2;
-
-            yn2 = yn3;
-            tn2 = tn3;
-            xn2 = xn3;
-
-            tn3 -= h;
-            timevals[i] = tn3;
-            xvalues[i] = xn3;
-            yvalues[i] = yn3;
-        }
-    }
-    vals.push_back(xvalues); vals.push_back(yvalues), vals.push_back(timevals);
-    return vals;
-}
-
-double xprime(double x, double y, double a, double b)
-{
-    // juan thesis eqn : x*(2*x*x - y*y - 2) - (sqrt(6)/2)*b*y*y;
-  return -2*x - (x*x + y*y);
-}
-
-double yprime(double x, double y, double a, double b)
-{
-    // juan thesis eqn : y*(2*x*x - y*y + 1 + (sqrt(6)/2)*b*x );
-  return -(1.-x)*y;
-}
 
 
 std::string Numbertostring(std::string text, double num)
@@ -437,7 +244,8 @@ std::vector<std::vector<double> > transpose_copy(std::vector<std::vector<double>
     
     // Assuming all inner vectors are same length. we can allocate space in advance.
     std::vector<std::vector<double> > result(data[0].size(), std::vector<double>(data.size()));
-    
+    // std::cout << "i= " << data[0].size() << std::endl;
+    // std::cout << "j= " << data.size() << std::endl;
     for (int i = 0; i < data[0].size(); i++) {
         for (int j = 0; j < data.size(); j++) {
             result[i][j] = data[j][i];
@@ -445,4 +253,47 @@ std::vector<std::vector<double> > transpose_copy(std::vector<std::vector<double>
     }
     return result;
 
+}
+
+void bif_pt2(std::vector<double>& x, std::vector<double>& y) {
+    double x2,y2; // bif points for eq_point x2
+    double lambda = sqrt(8./3.);
+    // bif at sqrt(8/3)
+    x2 = 2./(lambda*sqrt(6.));
+    y2 = 2./(lambda*sqrt(3.));
+
+    x.push_back(x2);
+    y.push_back(y2);
+}
+
+void bif_pt1(std::vector<double>& x, std::vector<double>& y) {
+    double x1,y1;
+    double lambda=sqrt(2.);
+
+    x1 = lambda/sqrt(6.);
+    y1 = sqrt(1 - (lambda*lambda)/6.);
+    x.push_back(x1);
+    y.push_back(y1);
+}
+
+void eq_pt(std::vector<double>& x, std::vector<double>& y, double lambda) {
+    // Returns the EQ PTS for the quintessence model with exponential curve (the basic one)
+    //  first: x = lambda/sqrt(6),      y = sqrt(1 - lambda^2/6)
+    // second: x = 2/(sqrt(6)lambda),   y = 2/(sqrt(3)lambda)
+
+    double x1,x2,y1,y2;
+    
+    // if(lambda*lambda < 6){
+        x1 = lambda/sqrt(6);
+        y1 = sqrt(1 - lambda*lambda/6);
+        x.push_back(x1);
+        y.push_back(y1);
+    // }
+    if(lambda > sqrt(2)) {
+    x2 = 2./(sqrt(6.)*lambda);
+    y2 = 2./(sqrt(3.)*lambda);
+
+    x.push_back(x2);
+    y.push_back(y2);
+    }
 }
