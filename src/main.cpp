@@ -19,14 +19,20 @@
 
 */
 
+// STANDARD
 #include <iostream>
-#include "integrators.hpp"
-#include "plotter.hpp"
 #include <string>
 #include <sstream>
 #include <complex>
+
+// BOOST
 #include <boost/numeric/odeint/integrate/integrate_const.hpp>
 #include <boost/numeric/odeint.hpp>
+
+// CUSTOM
+#include "plotter.hpp"
+#include "systems.hpp"
+
 
 namespace ni = boost::numeric::odeint;
 
@@ -38,6 +44,10 @@ void eq_pt(std::vector<double>& x, std::vector<double>& y, double lambda);
 void bif_pt1(std::vector<double>& x, std::vector<double>& y);
 void bif_pt2(std::vector<double>& x, std::vector<double>& y);
 
+
+inline double x_start(double y) {
+    return sqrt(1 - y*y);
+}
 
 struct push_back_state_and_time 
 {
@@ -56,48 +66,6 @@ struct push_back_state_and_time
 
 };
 
-class sean_problem
-{
-public:
-    double m_par;
-    sean_problem(double par): m_par(par) {}
-    // exponential potential with constant epsilon background
-
-    void operator() (const std::vector<double>& x, std::vector<double>& dxdt, const double /* t */) {
-        dxdt[0] = x[0]*(-2 + 2*x[0]*x[0] - x[1]*x[1] - x[2]*x[2]) + (sqrt(6.)/2.)*m_par*x[2]*x[2];
-        dxdt[1] = x[1]*(1 + 2*x[0]*x[0] - x[1]*x[1] - x[2]*x[2]);
-        dxdt[2] = x[2]*((sqrt(6.)/2.)*m_par*x[0] + 3*x[0]*x[0] + 1 - x[0]*x[0] - x[1]*x[1] - x[2]*x[2] );
-    }
-};
-
-
-class dynamical_system
-{
-public:
-    double  m_parameter;
-
-    dynamical_system(double parameter) :m_parameter(parameter) {}
-
-    void operator() (const std::vector<double>& x, std::vector<double>& dxdt, const double /*t*/){
-        dxdt[0] = -2*x[0] - (x[0]*x[0] + x[1]*x[1]);
-        dxdt[1] = -(1 - x[0])*x[1];
-    }
-
-};
-
-class quintessence
-{
-public:
-    double  lambda;
-
-    quintessence(double parameter) :lambda(parameter) {}
-
-    void operator() (const std::vector<double>& x, std::vector<double>& dxdt, const double /*t*/){
-        dxdt[0] = x[0]*(2*x[0]*x[0] - x[1]*x[1] - 2) + (sqrt(6.)/2.)*lambda*x[1]*x[1] ;
-        dxdt[1] = x[1]*(-lambda*(sqrt(6.)/2.)*x[0] + 2*x[0]*x[0] - x[1]*x[1] +1 );
-    }
-
-};
 
 int main()
 {
@@ -155,6 +123,7 @@ int main()
     Plot plt_animate("Animation test for odeint",4,2, 800,400);
     // plt_animate.mainwindow.setFramerateLimit(15);
     plt_animate.plotView.setCenter(sf::Vector2f(0,0.5));
+    // plt_animate.plotView.zoom(0.05f);
 
     // Plot slices
     // Plot xy("XY plane",4,2,800,400);
@@ -169,15 +138,16 @@ int main()
     while(plt_animate.mainwindow.isOpen()) {
         for (size_t i = 0; i < 250; i++)
         {
-            double lambda = 0.01*i;
+            double lambda = 0.01*(i+2);
+            double ystart = 0.35;
             for (int j = 0; j < 20; j++)
             {   
                 quintessence system2(lambda); 
                 
-                x[0] = -sqrt(3)/2. + sqrt(3)*j/20; x[1] = 0.5; //+ 0.005*j; //x[2] = 0.2 + 0.005*j;
+                x[0] = -x_start(ystart) + 2*x_start(ystart)*j/20; x[1] = ystart; //+ 0.005*j; //x[2] = 0.2 + 0.005*j;
                 ni::integrate_const(stepper,system2, x, 0.,5.,0.001,push_back_state_and_time(y2,t2)); // forward solution
 
-                x[0] = -sqrt(3)/2 + sqrt(3)*j/20; x[1] = 0.5; //+ 0.005*j; //x[2] = 0.2 + 0.005*j;// reset initial conditions for back solution.
+                x[0] = -x_start(ystart) + 2*x_start(ystart)*j/20; x[1] = ystart; //+ 0.005*j; //x[2] = 0.2 + 0.005*j;// reset initial conditions for back solution.
                 ni::integrate_adaptive(stepper,system2, x, 5.,0.,-0.001, push_back_state_and_time(x_vec,times)); // backward solution
 
                 // transposing Nx2 vector into 2XN
@@ -205,6 +175,7 @@ int main()
             // // plot eq points (non trivial)
             eq_pt(x_eq,y_eq,lambda);
             plt_animate.plot(cx,cy);
+            // plt_animate.plotView.setCenter(sf::Vector2f(x_eq[1],y_eq[1]));
             plt_animate.scatter(x_eq, y_eq, sf::Color::Cyan);
             plt_animate.scatter(x_bif, y_bif, sf::Color::Green);
             plt_animate.show();
