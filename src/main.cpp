@@ -69,39 +69,15 @@ struct push_back_state_and_time
 
 int main()
 {
-    //______________________________________________________________________________//
-    /*
-        Screen Text */
-
-    // sf::Font font;
-    // sf::Text text, eq1,eq2,eq3;
-    // if (!font.loadFromFile("OpenSans-Regular.ttf")) {
-    //     return 1;
-    // }
-
-    // text.setFont(font);
-    // text.setString("Test");
-    // text.setCharacterSize(16);
-    // text.setColor(sf::Color::White);
-    // text.setPosition(-320,-350);
-
-
-    // eq1.setFont(font);
-    // eq1.setString("Test");
-    // eq1.setCharacterSize(16);
-    // eq1.setColor(sf::Color::White);
-    // eq1.setPosition(-100,-350);
-
-    //______________________________________________________________________________//
-    //______________________________________________________________________________//
-    // BOOST NUMERIC.ODEINT METHOD OF INTEGRATION.
 
     std::vector<double> x(2);
     std::vector<std::vector<double> > x_vec, test_transpose,y2,test_transpose2;
     std::vector<double> times,xstate,ystate, t2;
 
-    std::vector<double> circle, cx, cy;
-    // std::vector<double> range;
+    
+    // Upper half disk drawn for quintessence model
+    std::vector<double> cx, cy;
+
     for (int i = 0; i < 200; i++) {
         float angle = M_PI*i/200;
         cx.push_back(cos(angle));
@@ -172,11 +148,13 @@ int main()
                 y2.clear(); t2.clear(); times.clear(); x_vec.clear(); 
             }
 
-            // // plot eq points (non trivial)
+            // calculate and plot eq points (non trivial)
             eq_pt(x_eq,y_eq,lambda);
+            // plot half disc for visual aide.
             plt_animate.plot(cx,cy);
-            // plt_animate.plotView.setCenter(sf::Vector2f(x_eq[1],y_eq[1]));
+            // plt_animate.plotView.setCenter(sf::Vector2f(x_eq[1],y_eq[1])); // sets plot camera to center an eq point
             plt_animate.scatter(x_eq, y_eq, sf::Color::Cyan);
+            // plotting the locations of bifurcations
             plt_animate.scatter(x_bif, y_bif, sf::Color::Green);
             plt_animate.show();
             // xy.show();
