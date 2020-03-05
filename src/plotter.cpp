@@ -27,6 +27,8 @@ Plot::Plot(std::string title, float width, float height, int sizex, int sizey)
     axesView.setViewport(sf::FloatRect(0,0,1,1));
     mainwindow.clear(sf::Color::Black);
 
+    std::cout << "Havent added text support yet. Functions are unfinished." << std::endl;
+
     // Load font package
     // font.loadFromFile("OpenSans-Regular.ttf");
 

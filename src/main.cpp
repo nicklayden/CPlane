@@ -137,16 +137,13 @@ int main()
             // // plotting the locations of bifurcations
             plt_animate.scatter(x_bif, y_bif, sf::Color::Green);
             plt_animate.show();
-            
+
             x_eq.clear(); y_eq.clear();
             x_eq.push_back(0);x_eq.push_back(1);x_eq.push_back(-1); 
             y_eq.push_back(0);y_eq.push_back(0);y_eq.push_back(0);
         
         }
         plt_animate.EventLoop();
-        // xy.EventLoop();
-        // zx.EventLoop();
-        // yz.EventLoop();
     } // end while
 
 } // end main

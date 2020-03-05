@@ -15,7 +15,7 @@ objs = $(srcs:.cpp=.o)
 bins = $(src:.cpp=)
 
 # global cpp flags
-cppflags = -std=c++11 -O3
+cppflags = -std=c++11 -O3 -Wno-deprecated-declarations
 
 # specialized cpp flags - per compile basis
 cppflags += $(cppflags-$@)
