@@ -15,12 +15,12 @@ objs = $(srcs:.cpp=.o)
 bins = $(src:.cpp=)
 
 # global cpp flags
-cppflags = -std=c++11
+cppflags = -std=c++11 -O3
 
 # specialized cpp flags - per compile basis
 cppflags += $(cppflags-$@)
 # flags needed only to compile executable at final step
-cppflags-plane += -lsfml-graphics -lsfml-system -lsfml-window
+cppflags-plane += -lsfml-graphics -lsfml-system -lsfml-window 
 
 # linker flags:
 linkflags = -stdlib=libc++

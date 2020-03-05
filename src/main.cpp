@@ -101,16 +101,6 @@ int main()
     plt_animate.plotView.setCenter(sf::Vector2f(0,0.5));
     // plt_animate.plotView.zoom(0.05f);
 
-    // Plot slices
-    // Plot xy("XY plane",4,2,800,400);
-    // Plot zx("ZX plane",4,2,800,400);
-    // Plot yz("YZ plane",4,2,800,400);
-    // xy.plotView.setCenter(sf::Vector2f(0,0.5));
-    // zx.plotView.setCenter(sf::Vector2f(0,0.5));
-    // yz.plotView.setCenter(sf::Vector2f(0,0.5));
-
-
-
     while(plt_animate.mainwindow.isOpen()) {
         for (size_t i = 0; i < 250; i++)
         {
@@ -124,7 +114,7 @@ int main()
                 ni::integrate_const(stepper,system2, x, 0.,5.,0.001,push_back_state_and_time(y2,t2)); // forward solution
 
                 x[0] = -x_start(ystart) + 2*x_start(ystart)*j/20; x[1] = ystart; //+ 0.005*j; //x[2] = 0.2 + 0.005*j;// reset initial conditions for back solution.
-                ni::integrate_adaptive(stepper,system2, x, 5.,0.,-0.001, push_back_state_and_time(x_vec,times)); // backward solution
+                ni::integrate_const(stepper,system2, x, 5.,0.,-0.001, push_back_state_and_time(x_vec,times)); // backward solution
 
                 // transposing Nx2 vector into 2XN
                 test_transpose2 = transpose_copy(y2);
@@ -134,32 +124,20 @@ int main()
                 plt_animate.plot(test_transpose2[0], test_transpose2[1], sf::Color::Red);
                 plt_animate.plot(test_transpose[0], test_transpose[1], sf::Color::Red);
 
-                // xy.plot(test_transpose2[0], test_transpose2[1], sf::Color::Red);
-                // xy.plot(test_transpose[0], test_transpose[1], sf::Color::Red);
-
-                // zx.plot(test_transpose2[0], test_transpose2[2], sf::Color::Red);
-                // zx.plot(test_transpose[0], test_transpose[2], sf::Color::Red);
-                
-                // yz.plot(test_transpose2[2], test_transpose2[1], sf::Color::Red);
-                // yz.plot(test_transpose[2], test_transpose[1], sf::Color::Red);
-
-
                 // Clear vectors for next solution curve.
                 y2.clear(); t2.clear(); times.clear(); x_vec.clear(); 
             }
 
-            // calculate and plot eq points (non trivial)
+            // // calculate and plot eq points (non trivial)
             eq_pt(x_eq,y_eq,lambda);
-            // plot half disc for visual aide.
+            // // plot half disc for visual aide.
             plt_animate.plot(cx,cy);
-            // plt_animate.plotView.setCenter(sf::Vector2f(x_eq[1],y_eq[1])); // sets plot camera to center an eq point
+            // // plt_animate.plotView.setCenter(sf::Vector2f(x_eq[1],y_eq[1])); // sets plot camera to center an eq point
             plt_animate.scatter(x_eq, y_eq, sf::Color::Cyan);
-            // plotting the locations of bifurcations
+            // // plotting the locations of bifurcations
             plt_animate.scatter(x_bif, y_bif, sf::Color::Green);
             plt_animate.show();
-            // xy.show();
-            // zx.show();
-            // yz.show();
+            
             x_eq.clear(); y_eq.clear();
             x_eq.push_back(0);x_eq.push_back(1);x_eq.push_back(-1); 
             y_eq.push_back(0);y_eq.push_back(0);y_eq.push_back(0);
